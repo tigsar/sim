@@ -132,14 +132,14 @@ class ProportionalController {
     }
 
     output(input, derivative) {
-        checkSymbol(input, angle);
+        checkSymbol(input, measuredAngle);
         return {
-            [commandedDeflection]: this.parameters[controllerGain] * (input[angle] - this.parameters[reference])
+            [commandedDeflection]: this.parameters[controllerGain] * (input[measuredAngle] - this.parameters[reference])
         };
     }
 }
 
-let launcher = new LauncherPlant({
+let plant = new LauncherPlant({
     [momentOfInertia]: 10,
     [arm]: 1,
     [thrust]: 100
@@ -169,10 +169,34 @@ let controller = new ProportionalController({
 
 /* Models wiring */
 
-let integartor = new SimpleIntegrator(launcher, 0.01);
-integartor.integrate({
-    [thrust]: 100,
-    [deflection]: 0.001
-});
+let plantIntegrator = new SimpleIntegrator(plant, 0.01);
+let actuatorIntegrator = new SimpleIntegrator(actuator, 0.01);
 
-console.log(launcher.state);
+/* Plant */
+let plantInput = {
+    [deflection]: 0.001
+};
+plantIntegrator.integrate(plantInput);
+let plantOutput = plant.output(plantInput);
+
+/* Sensor */
+let sensorInput = {
+    [angle]: plantOutput[angle]
+};
+let sensorOutput = sensor.output(sensorInput);
+
+/* Controller */
+let controllerInput = {
+    [measuredAngle]: sensorOutput[measuredAngle]
+};
+let controllerOutput = controller.output(controllerInput);
+
+/* Actuator */
+let actuatorInput = {
+    [commandedDeflection]: controllerOutput[commandedDeflection]
+};
+actuatorIntegrator.integrate(actuatorInput);
+let actuatorOutput = actuator.output(actuatorInput);
+// actuatorOutput is plantInput
+
+console.log(plant.state);
