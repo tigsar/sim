@@ -53,6 +53,7 @@ class LauncherPlant {
         // FIXME can be improved (e.g. passing list of symbols to super constructor)
         checkSymbol(parameters, momentOfInertia);
         checkSymbol(parameters, arm);
+        checkSymbol(parameters, thrust);
         this.parameters = parameters;
 
         checkSymbol(initialCondition, angle);
@@ -62,21 +63,17 @@ class LauncherPlant {
     }
 
     derivative(input) {
-        checkSymbol(input, thrust);
         checkSymbol(input, deflection);
         return {
             [angularVelocity]: this.state[angularVelocity],
-            [angularAcceleration]: ((input[thrust] * this.parameters[arm]) / this.parameters[momentOfInertia]) * Math.sin(input[deflection])
+            [angularAcceleration]: ((this.parameters[thrust] * this.parameters[arm]) / this.parameters[momentOfInertia]) * Math.sin(input[deflection])
         };
     }
 
     output(input, derivative) {
-        checkSymbol(input, thrust);
         checkSymbol(input, deflection);
         return {
-            [angle]: this.state[angle],
-            [angularVelocity]: this.state[angularVelocity],
-            [angularAcceleration]: derivative[angularAcceleration]
+            [angle]: this.state[angle]
         };
     }
 }
@@ -129,22 +126,23 @@ class NozzleActuator {
 class ProportionalController {
     constructor(parameters) {
         checkSymbol(parameters, controllerGain);
+        checkSymbol(parameters, reference);
         this.parameters = parameters;
         this.time = 0;
     }
 
     output(input, derivative) {
         checkSymbol(input, angle);
-        checkSymbol(input, reference);
         return {
-            [commandedDeflection]: this.parameters[controllerGain] * (input[angle] - input[reference])
+            [commandedDeflection]: this.parameters[controllerGain] * (input[angle] - this.parameters[reference])
         };
     }
 }
 
 let launcher = new LauncherPlant({
     [momentOfInertia]: 10,
-    [arm]: 1
+    [arm]: 1,
+    [thrust]: 100
 }, {
     [angle]: 0,
     [angularVelocity]: 0.1
@@ -165,7 +163,8 @@ let actuator = new NozzleActuator({
 });
 
 let controller = new ProportionalController({
-    [controllerGain]: 1
+    [controllerGain]: 1,
+    [reference]: 0
 });
 
 /* Models wiring */
