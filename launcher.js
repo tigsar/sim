@@ -24,10 +24,13 @@ let measuredAngle = Symbol('theta_m');
 /* Definition of derivatives */
 let derivativeOf = {
     [angle]: angularVelocity,
-    [angularVelocity]: angularAcceleration
+    [angularVelocity]: angularAcceleration,
+    [deflection]: deflectionAngularVelocity,
+    [deflectionAngularVelocity]: deflectionAngularAcceleration
 };
 
 class MissingSymbol extends Error {};
+class MissingDerivative extends Error {};
 
 function checkSymbol(obj, symbol) {
     if (!(symbol in obj))
@@ -43,7 +46,11 @@ class SimpleIntegrator {
     integrate(input) {
         let derivative = this.block.derivative(input);
         for (let symbol of Object.getOwnPropertySymbols(this.block.state)) { /* Iterate all symbols of the state */
-            this.block.state[symbol] += derivative[derivativeOf[symbol]] * this.dt;
+            if (symbol in derivativeOf) {
+                this.block.state[symbol] += derivative[derivativeOf[symbol]] * this.dt;
+            } else {
+                throw new MissingDerivative(`Cannot find the derivative of ${symbol.toString()}`);
+            }
         }
     }
 }
@@ -70,8 +77,7 @@ class LauncherPlant {
         };
     }
 
-    output(input, derivative) {
-        checkSymbol(input, deflection);
+    output(input) {
         return {
             [angle]: this.state[angle]
         };
@@ -115,8 +121,7 @@ class NozzleActuator {
         };
     }
 
-    output(input, derivative) {
-        checkSymbol(input, commandedDeflection);
+    output(input) {
         return {
             [deflection]: this.state[deflection]
         };
@@ -131,7 +136,7 @@ class ProportionalController {
         this.time = 0;
     }
 
-    output(input, derivative) {
+    output(input) {
         checkSymbol(input, measuredAngle);
         return {
             [commandedDeflection]: this.parameters[controllerGain] * (input[measuredAngle] - this.parameters[reference])
@@ -167,36 +172,57 @@ let controller = new ProportionalController({
     [reference]: 0
 });
 
-/* Models wiring */
-
 let plantIntegrator = new SimpleIntegrator(plant, 0.01);
 let actuatorIntegrator = new SimpleIntegrator(actuator, 0.01);
 
-/* Plant */
-let plantInput = {
-    [deflection]: 0.001
-};
-plantIntegrator.integrate(plantInput);
-let plantOutput = plant.output(plantInput);
+let N = 10;
+for (let n = 1; n <= N; n++) {
+    console.log('Simulation time', n);
 
-/* Sensor */
-let sensorInput = {
-    [angle]: plantOutput[angle]
-};
-let sensorOutput = sensor.output(sensorInput);
+    console.log(' Actuator STATE', actuator.state);
+    console.log(' Plant STATE', plant.state);
 
-/* Controller */
-let controllerInput = {
-    [measuredAngle]: sensorOutput[measuredAngle]
-};
-let controllerOutput = controller.output(controllerInput);
+    /* 
+     * Step 1: For each model with an internal dynamic state
+     *      1.1) Evaluate the output of models (with null input)
+     *      1.2) Propagate the output according to the wiring
+     */
+    let actuatorOutput = actuator.output(null);
+    let plantInput = {
+        [deflection]: actuatorOutput[deflection]
+    };
 
-/* Actuator */
-let actuatorInput = {
-    [commandedDeflection]: controllerOutput[commandedDeflection]
-};
-actuatorIntegrator.integrate(actuatorInput);
-let actuatorOutput = actuator.output(actuatorInput);
-// actuatorOutput is plantInput
+    let plantOutput = plant.output(null);
+    let sensorInput = {
+        [angle]: plantOutput[angle]
+    };
 
-console.log(plant.state);
+    /*
+     * Step 2: For each model without an internal dynamic state and in proper order
+     *      2.1) Evaluate the output of all model (with the corresponding input)
+     *      2.2) Propagate the output according to the wiring
+     */
+    let sensorOutput = sensor.output(sensorInput);
+    let controllerInput = {
+        [measuredAngle]: sensorOutput[measuredAngle]
+    };
+
+    let controllerOutput = controller.output(controllerInput);
+    let actuatorInput = {
+        [commandedDeflection]: controllerOutput[commandedDeflection]
+    };
+    console.log(' Actuator OUT', actuatorOutput);
+    console.log(' Plant IN', plantInput);
+    console.log(' Plant OUT', plantOutput);
+    console.log(' Sensor IN', sensorInput);
+    console.log(' Sensor OUT', sensorOutput);
+    console.log(' Controller IN', controllerInput);
+    console.log(' Controller OUT', controllerOutput);
+    console.log(' Actuator IN', actuatorInput);
+
+    /* 
+     * Step 3: For each model with an internal dynamic state, update the internal state
+     */
+    actuatorIntegrator.integrate(actuatorInput);
+    plantIntegrator.integrate(plantInput);
+}
