@@ -21,14 +21,6 @@ let bias = Symbol('b');
 let noiseVariance = Symbol('sigma');
 let measuredAngle = Symbol('theta_m');
 
-/* Definition of derivatives */
-let derivativeOf = {
-    [angle]: angularVelocity,
-    [angularVelocity]: angularAcceleration,
-    [deflection]: deflectionAngularVelocity,
-    [deflectionAngularVelocity]: deflectionAngularAcceleration
-};
-
 class MissingSymbol extends Error {};
 class MissingDerivative extends Error {};
 
@@ -47,6 +39,7 @@ class SimpleIntegrator {
     integrate(input) {
         let derivative = this.block.derivative(input);
         for (let symbol of Object.getOwnPropertySymbols(this.block.state)) { /* Iterate all symbols of the state */
+            let derivativeOf = this.block.derivativesDef;
             if (symbol in derivativeOf) {
                 this.block.state[symbol] += derivative[derivativeOf[symbol]] * this.dt;
             } else {
@@ -88,11 +81,12 @@ class CommonBlock {
 class DirectBlock extends CommonBlock { }
 
 class DynamicBlock extends CommonBlock {
-    constructor(inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition) {
+    constructor(inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef) {
         super(inputSignals, outputSignals, parameterSignals, parameter);
         this.stateSignals = stateSignals;
         this.checkState(initialCondition);
         this.state = initialCondition;
+        this.derivativesDef = derivativesDef;
         this.time = 0;
     }
 
@@ -111,7 +105,10 @@ class LauncherPlant extends DynamicBlock {
             [ angle, angularVelocity ], /* State signals */
             [ momentOfInertia, arm, thrust ], /* Parameter signals */
             parameter,
-            initialCondition
+            initialCondition, {
+                [angle]: angularVelocity,
+                [angularVelocity]: angularAcceleration
+            }
         );
     }
 
@@ -156,7 +153,10 @@ class NozzleActuator extends DynamicBlock {
             [ deflection, deflectionAngularVelocity ], /* State signals */
             [ actuatorNaturalFrequency, actuatorDampingRatio ], /* Parameter signals */
             parameter,
-            initialCondition
+            initialCondition, {
+                [deflection]: deflectionAngularVelocity,
+                [deflectionAngularVelocity]: deflectionAngularAcceleration
+            }
         );
     }
 
