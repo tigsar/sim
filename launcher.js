@@ -41,6 +41,7 @@ class SimpleIntegrator {
     constructor(block, dt) {
         this.dt = dt;
         this.block = block;
+        this.time = 0;
     }
 
     integrate(input) {
@@ -52,6 +53,7 @@ class SimpleIntegrator {
                 throw new MissingDerivative(`Cannot find the derivative of ${symbol.toString()}`);
             }
         }
+        this.time += this.dt;
     }
 }
 
@@ -156,7 +158,7 @@ let plant = new LauncherPlant({
 let sensor = new AngleSensor({
     [scaleFactor]: 1.01,
     [bias]: 0.1,
-    [noiseVariance]: 0.1
+    [noiseVariance]: 0
 });
 
 let actuator = new NozzleActuator({
@@ -168,20 +170,41 @@ let actuator = new NozzleActuator({
 });
 
 let controller = new ProportionalController({
-    [controllerGain]: 1,
+    [controllerGain]: -1,
     [reference]: 0
 });
 
 let plantIntegrator = new SimpleIntegrator(plant, 0.01);
 let actuatorIntegrator = new SimpleIntegrator(actuator, 0.01);
 
-let N = 10;
-for (let n = 1; n <= N; n++) {
-    console.log('Simulation time', n);
+class Logger {
+    constructor() {
+        this.firstTime = true;
+    }
+    log(t, buses) {
+        let header = "t,", data = "";
+        data += t + ",";
+        let processedSignal = {};
+        for (let bus of buses) {
+            for (let signal of Object.getOwnPropertySymbols(bus)) {
+                if (!(signal in processedSignal)) {
+                    processedSignal[signal] = true;
+                    if (this.firstTime) header += signal.toString() + ",";
+                    data += bus[signal] + ",";
+                }
+            }
+        }
+        if (this.firstTime) {
+            console.log(header);
+            this.firstTime = false;
+        }
+        console.log(data);
+    }
+}
 
-    console.log(' Actuator STATE', actuator.state);
-    console.log(' Plant STATE', plant.state);
-
+let logger = new Logger();
+let N = 1001;
+for (let n = 0; n <= N; n++) {
     /* 
      * Step 1: For each model with an internal dynamic state
      *      1.1) Evaluate the output of models (with null input)
@@ -211,14 +234,14 @@ for (let n = 1; n <= N; n++) {
     let actuatorInput = {
         [commandedDeflection]: controllerOutput[commandedDeflection]
     };
-    console.log(' Actuator OUT', actuatorOutput);
-    console.log(' Plant IN', plantInput);
-    console.log(' Plant OUT', plantOutput);
-    console.log(' Sensor IN', sensorInput);
-    console.log(' Sensor OUT', sensorOutput);
-    console.log(' Controller IN', controllerInput);
-    console.log(' Controller OUT', controllerOutput);
-    console.log(' Actuator IN', actuatorInput);
+    logger.log(actuatorIntegrator.time, [
+        actuator.state,
+        plant.state,
+        actuatorOutput,
+        plantOutput,
+        sensorOutput,
+        controllerOutput,
+    ]);
 
     /* 
      * Step 3: For each model with an internal dynamic state, update the internal state
