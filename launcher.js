@@ -57,91 +57,139 @@ class SimpleIntegrator {
     }
 }
 
-class LauncherPlant {
-    constructor(parameters, initialCondition) {
-        // FIXME can be improved (e.g. passing list of symbols to super constructor)
-        checkSymbol(parameters, momentOfInertia);
-        checkSymbol(parameters, arm);
-        checkSymbol(parameters, thrust);
-        this.parameters = parameters;
+class CommonBlock {
+    constructor(inputSignals, outputSignals, parameterSignals, parameter) {
+        this.parameterSignals = parameterSignals;
+        this.checkParameter(parameter);
+        this.parameter = parameter;
+        this.inputSignals = inputSignals;
+        this.outputSignals = outputSignals;
+    }
 
-        checkSymbol(initialCondition, angle);
-        checkSymbol(initialCondition, angularVelocity);
+    checkInput(input) {
+        for (let signal of this.inputSignals) {
+            checkSymbol(input, signal);
+        }
+    }
+
+    checkOutput(output) {
+        for (let signal of this.outputSignals) {
+            checkSymbol(output, signal);
+        }
+    }
+
+    checkParameter(parameter) {
+        for (let signal of this.parameterSignals) {
+            checkSymbol(parameter, signal);
+        }
+    }
+}
+
+class DirectBlock extends CommonBlock { }
+
+class DynamicBlock extends CommonBlock {
+    constructor(inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition) {
+        super(inputSignals, outputSignals, parameterSignals, parameter);
+        this.stateSignals = stateSignals;
+        this.checkState(initialCondition);
         this.state = initialCondition;
         this.time = 0;
     }
 
+    checkState(state) {
+        for (let signal of this.stateSignals) {
+            checkSymbol(state, signal);
+        }
+    }
+}
+
+class LauncherPlant extends DynamicBlock {
+    constructor(parameter, initialCondition) {
+        super(
+            [ deflection ], /* Input signals */
+            [ angle ], /* Output signals */
+            [ angle, angularVelocity ], /* State signals */
+            [ momentOfInertia, arm, thrust ], /* Parameter signals */
+            parameter,
+            initialCondition
+        );
+    }
+
     derivative(input) {
-        checkSymbol(input, deflection);
+        this.checkInput(input)
         return {
             [angularVelocity]: this.state[angularVelocity],
-            [angularAcceleration]: ((this.parameters[thrust] * this.parameters[arm]) / this.parameters[momentOfInertia]) * Math.sin(input[deflection])
+            [angularAcceleration]: ((this.parameter[thrust] * this.parameter[arm]) / this.parameter[momentOfInertia]) * Math.sin(input[deflection])
         };
     }
 
-    output(input) {
+    output() {
         return {
             [angle]: this.state[angle]
         };
     }
 }
 
-class AngleSensor {
-    constructor(parameters) {
-        checkSymbol(parameters, scaleFactor);
-        checkSymbol(parameters, bias);
-        checkSymbol(parameters, noiseVariance);
-        this.parameters = parameters;
+class AngleSensor extends DirectBlock {
+    constructor(parameter) {
+        super(
+            [ angle ], /* Input signals */
+            [ measuredAngle ], /* Output signals */
+            [ scaleFactor, bias, noiseVariance ], /* Parameter signals */
+            parameter
+        );
     }
 
     output(input) {
-        checkSymbol(input, angle);
+        this.checkInput(input);
         return {
-            [measuredAngle]: input[angle] * this.parameters[scaleFactor] + this.parameters[bias] + Math.sqrt(this.parameters[noiseVariance]) * Math.random()
+            [measuredAngle]: input[angle] * this.parameter[scaleFactor] + this.parameter[bias] + Math.sqrt(this.parameter[noiseVariance]) * Math.random()
         };
     }
 }
 
-class NozzleActuator {
-    constructor(parameters, initialCondition) {
-        checkSymbol(parameters, actuatorNaturalFrequency);
-        checkSymbol(parameters, actuatorDampingRatio);
-        this.parameters = parameters;
-
-        checkSymbol(initialCondition, deflection);
-        checkSymbol(initialCondition, deflectionAngularVelocity);
-        this.state = initialCondition;
-        this.time = 0;
+class NozzleActuator extends DynamicBlock {
+    constructor(parameter, initialCondition) {
+        super(
+            [ commandedDeflection ], /* Input signals */
+            [ deflection ], /* Output signals */
+            [ deflection, deflectionAngularVelocity ], /* State signals */
+            [ actuatorNaturalFrequency, actuatorDampingRatio ], /* Parameter signals */
+            parameter,
+            initialCondition
+        );
     }
 
     derivative(input) {
-        checkSymbol(input, commandedDeflection);
-        let naturalFrequencySquare = Math.pow(this.parameters[actuatorNaturalFrequency], 2);
+        this.checkInput(input);
+        let naturalFrequencySquare = Math.pow(this.parameter[actuatorNaturalFrequency], 2);
         return {
             [deflectionAngularVelocity]: this.state[deflectionAngularVelocity],
-            [deflectionAngularAcceleration]: naturalFrequencySquare * input[commandedDeflection] - naturalFrequencySquare * this.state[deflection] - 2 * this.parameters[actuatorNaturalFrequency] * this.parameters[actuatorDampingRatio] * this.state[deflectionAngularVelocity]
+            [deflectionAngularAcceleration]: naturalFrequencySquare * input[commandedDeflection] - naturalFrequencySquare * this.state[deflection] - 2 * this.parameter[actuatorNaturalFrequency] * this.parameter[actuatorDampingRatio] * this.state[deflectionAngularVelocity]
         };
     }
 
-    output(input) {
+    output() {
         return {
             [deflection]: this.state[deflection]
         };
     }
 }
 
-class ProportionalController {
-    constructor(parameters) {
-        checkSymbol(parameters, controllerGain);
-        checkSymbol(parameters, reference);
-        this.parameters = parameters;
-        this.time = 0;
+class ProportionalController extends DirectBlock {
+    constructor(parameter) {
+        super(
+            [ measuredAngle ], /* Input signals */
+            [ commandedDeflection ], /* Output signals */
+            [ controllerGain, reference ], /* Parameter signals */
+            parameter
+        );
     }
 
     output(input) {
-        checkSymbol(input, measuredAngle);
+        this.checkInput(input);
         return {
-            [commandedDeflection]: this.parameters[controllerGain] * (input[measuredAngle] - this.parameters[reference])
+            [commandedDeflection]: this.parameter[controllerGain] * (input[measuredAngle] - this.parameter[reference])
         };
     }
 }
@@ -210,12 +258,12 @@ for (let n = 0; n <= N; n++) {
      *      1.1) Evaluate the output of models (with null input)
      *      1.2) Propagate the output according to the wiring
      */
-    let actuatorOutput = actuator.output(null);
+    let actuatorOutput = actuator.output();
     let plantInput = {
         [deflection]: actuatorOutput[deflection]
     };
 
-    let plantOutput = plant.output(null);
+    let plantOutput = plant.output();
     let sensorInput = {
         [angle]: plantOutput[angle]
     };
