@@ -325,47 +325,19 @@ class Logger {
 let logger = new Logger();
 let N = 1001;
 for (let n = 0; n <= N; n++) {
-    /* 
-     * Step 1: For each model with an internal dynamic state
-     *      1.1) Evaluate the output of models (with null input)
-     *      1.2) Propagate the output according to the wiring
-     */
-    let actuatorOutput = actuator.output();
-    let plantInput = {
-        [deflection]: actuatorOutput[deflection]
-    };
+    /* Calculate the output of all blocks for the current time step */
+    solver.solve();
 
-    let plantOutput = plant.output();
-    let sensorInput = {
-        [angle]: plantOutput[angle]
-    };
-
-    /*
-     * Step 2: For each model without an internal dynamic state and in proper order
-     *      2.1) Evaluate the output of all model (with the corresponding input)
-     *      2.2) Propagate the output according to the wiring
-     */
-    let sensorOutput = sensor.output(sensorInput);
-    let controllerInput = {
-        [measuredAngle]: sensorOutput[measuredAngle]
-    };
-
-    let controllerOutput = controller.output(controllerInput);
-    let actuatorInput = {
-        [commandedDeflection]: controllerOutput[commandedDeflection]
-    };
     logger.log(actuatorIntegrator.time, [
         actuator.state,
         plant.state,
-        actuatorOutput,
-        plantOutput,
-        sensorOutput,
-        controllerOutput,
+        actuator._solver.output,
+        plant._solver.output,
+        sensor._solver.output,
+        controller._solver.output,
     ]);
 
-    /* 
-     * Step 3: For each model with an internal dynamic state, update the internal state
-     */
-    actuatorIntegrator.integrate(actuatorInput);
-    plantIntegrator.integrate(plantInput);
+    /* For blocks with an internal dynamic state, update the internal state (prepare for the next iteration) */
+    actuatorIntegrator.integrate(actuator._solver.input);
+    plantIntegrator.integrate(plant._solver.input);
 }
