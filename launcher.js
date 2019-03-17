@@ -30,27 +30,6 @@ function checkSymbol(obj, symbol) {
         throw new MissingSymbol(`${symbol.toString()} is missing`);
 }
 
-class SimpleIntegrator {
-    constructor(block, dt) {
-        this.dt = dt;
-        this.block = block;
-        this.time = 0;
-    }
-
-    integrate(input) {
-        let derivative = this.block.derivative(input);
-        for (let symbol of Object.getOwnPropertySymbols(this.block.state)) { /* Iterate all symbols of the state */
-            let derivativeOf = this.block.derivativesDef;
-            if (symbol in derivativeOf) {
-                this.block.state[symbol] += derivative[derivativeOf[symbol]] * this.dt;
-            } else {
-                throw new MissingDerivative(`Cannot find the derivative of ${symbol.toString()}`);
-            }
-        }
-        this.time += this.dt;
-    }
-}
-
 class CommonBlock {
     constructor(inputSignals, outputSignals, parameterSignals, parameter) {
         this.parameterSignals = parameterSignals;
@@ -224,9 +203,11 @@ let controller = new ProportionalController({
 });
 
 class Solver {
-    constructor(blocks, links) {
+    constructor(blocks, links, dt) {
         this.blocks = blocks;
         this.links = links;
+        this.dt = dt;
+        this.time = 0;
     }
 
     solve() {
@@ -253,6 +234,29 @@ class Solver {
                     wire.block._solver.input = wire.block._solver.input || {};
                     wire.block._solver.input[wire.signal] = block._solver.output[outputSignal];
                 }
+            }
+        }
+    }
+
+    update() {
+        /* For blocks with an internal dynamic state, update the internal state (prepare for the next iteration) */
+        for (let block of this.blocks) {
+            if (block instanceof DynamicBlock) {
+                this._integrate(block);
+            }
+        }
+        this.time += this.dt;
+    }
+
+    _integrate(block) {
+        let input = block._solver.input;
+        let derivative = block.derivative(input);
+        for (let symbol of Object.getOwnPropertySymbols(block.state)) { /* Iterate all symbols of the state */
+            let derivativeOf = block.derivativesDef;
+            if (symbol in derivativeOf) {
+                block.state[symbol] += derivative[derivativeOf[symbol]] * this.dt;
+            } else {
+                throw new MissingDerivative(`Cannot find the derivative of ${symbol.toString()}`);
             }
         }
     }
@@ -290,12 +294,7 @@ let solver = new Solver([
         from: { block: actuator, signal: deflection },
         to: { block: plant, signal: deflection }
     }
-]);
-
-solver.solve();
-
-let plantIntegrator = new SimpleIntegrator(plant, 0.01);
-let actuatorIntegrator = new SimpleIntegrator(actuator, 0.01);
+], 0.01);
 
 class Logger {
     constructor() {
@@ -328,7 +327,7 @@ for (let n = 0; n <= N; n++) {
     /* Calculate the output of all blocks for the current time step */
     solver.solve();
 
-    logger.log(actuatorIntegrator.time, [
+    logger.log(solver.time, [
         actuator.state,
         plant.state,
         actuator._solver.output,
@@ -337,7 +336,6 @@ for (let n = 0; n <= N; n++) {
         controller._solver.output,
     ]);
 
-    /* For blocks with an internal dynamic state, update the internal state (prepare for the next iteration) */
-    actuatorIntegrator.integrate(actuator._solver.input);
-    plantIntegrator.integrate(plant._solver.input);
+    /* Prepare for next time step */
+    solver.update();
 }
