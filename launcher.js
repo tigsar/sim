@@ -24,6 +24,7 @@ let measuredAngle = Symbol('theta_m');
 class MissingSignal extends Error {};
 class MissingDerivative extends Error {};
 class NotSupportedBlockType extends Error {};
+class PressenceOfAlgebraicLoop extends Error {};
 
 function checkSignal(bus, signal) {
     if (!bus || !(signal in bus))
@@ -31,7 +32,8 @@ function checkSignal(bus, signal) {
 }
 
 class CommonBlock {
-    constructor(inputSignals, outputSignals, parameterSignals, parameter) {
+    constructor(name, inputSignals, outputSignals, parameterSignals, parameter) {
+        this.name = name;
         this.parameterSignals = parameterSignals;
         this.checkParameter(parameter);
         this.parameter = parameter;
@@ -56,13 +58,17 @@ class CommonBlock {
             checkSignal(parameter, signal);
         }
     }
+
+    toString() {
+        return this.name;
+    }
 }
 
 class DirectBlock extends CommonBlock { }
 
 class DynamicBlock extends CommonBlock {
-    constructor(inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef) {
-        super(inputSignals, outputSignals, parameterSignals, parameter);
+    constructor(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef) {
+        super(name, inputSignals, outputSignals, parameterSignals, parameter);
         this.stateSignals = stateSignals;
         this.checkState(initialCondition);
         this.state = initialCondition;
@@ -80,6 +86,7 @@ class DynamicBlock extends CommonBlock {
 class LauncherPlant extends DynamicBlock {
     constructor(parameter, initialCondition) {
         super(
+            "Plant",
             [ deflection ], /* Input signals */
             [ angle ], /* Output signals */
             [ angle, angularVelocity ], /* State signals */
@@ -110,6 +117,7 @@ class LauncherPlant extends DynamicBlock {
 class AngleSensor extends DirectBlock {
     constructor(parameter) {
         super(
+            "Sensor",
             [ angle ], /* Input signals */
             [ measuredAngle ], /* Output signals */
             [ scaleFactor, bias, noiseVariance ], /* Parameter signals */
@@ -128,6 +136,7 @@ class AngleSensor extends DirectBlock {
 class NozzleActuator extends DynamicBlock {
     constructor(parameter, initialCondition) {
         super(
+            "Actuator",
             [ commandedDeflection ], /* Input signals */
             [ deflection ], /* Output signals */
             [ deflection, deflectionAngularVelocity ], /* State signals */
@@ -159,6 +168,7 @@ class NozzleActuator extends DynamicBlock {
 class ProportionalController extends DirectBlock {
     constructor(parameter) {
         super(
+            "Controller",
             [ measuredAngle ], /* Input signals */
             [ commandedDeflection ], /* Output signals */
             [ controllerGain, reference ], /* Parameter signals */
@@ -208,6 +218,7 @@ class Solver {
         this.links = links;
         this.dt = dt;
         this.time = 0;
+        this._checkAlgebraicLoops();
     }
 
     solve() {
@@ -269,6 +280,55 @@ class Solver {
             }
         }
         return output;
+    }
+
+    _getDependencies(block) {
+        let dependencies = [];
+        for (let link of this.links) {
+            if (link.to.block == block) {
+                if (!(link.from.block in dependencies)) {
+                    dependencies.push(link.from.block);
+                }
+            }
+        }
+        return dependencies;
+    }
+
+    _getDependents(block) {
+        let dependents = [];
+        for (let link of this.links) {
+            if (link.from.block == block) {
+                if (!(link.to.block in dependents)) {
+                    dependents.push(link.to.block);
+                }
+            }
+        }
+        return dependents;
+    }
+    
+    _checkAlgebraicLoops() {
+        /* Calculate the dependencies and dependents */
+        for (let block of this.blocks) {
+            block._topology = block._topology || {};
+            if (block instanceof DirectBlock) {
+                block._topology.missingInputs = this._getDependencies(block);
+            } else {
+                block._topology.missingInputs = [];
+            }
+            block._topology.dependents = this._getDependents(block);
+        }
+
+        /* Check there is no algebraic loops in the topology */
+        for (let block of this.blocks) {
+            if (block._topology.missingInputs.length > 0) {
+                throw new PressenceOfAlgebraicLoop(`Cannot compute the output of ${block} because ${block._topology.missingInput} shall be calculated first`);
+            }
+            
+            /* Updated the list of missing inputs for each dependent block */
+            for (let dependent of block._topology.dependents) {
+                dependent._topology.missingInputs = dependent._topology.missingInputs.filter(item => item != block);
+            }
+        }
     }
 }
 
