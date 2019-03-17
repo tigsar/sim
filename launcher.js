@@ -218,6 +218,7 @@ class Solver {
         this.links = links;
         this.dt = dt;
         this.time = 0;
+        this.blocks = this._resolveOrder();
         this._checkAlgebraicLoops();
     }
 
@@ -330,13 +331,61 @@ class Solver {
             }
         }
     }
+
+    _resolveOrder() {
+        let toBeProcessed = this.blocks.slice();
+        let toBeProcessedLength = toBeProcessed.length;
+        let counter = 0;
+        let solution = [];
+
+        /* Calculate the dependencies and dependents */
+        for (let block of this.blocks) {
+            block._topology = block._topology || {};
+            if (block instanceof DirectBlock) {
+                block._topology.missingInputs = this._getDependencies(block);
+            } else {
+                block._topology.missingInputs = [];
+            }
+            block._topology.dependents = this._getDependents(block);
+        }
+        
+        while (toBeProcessed.length > 0) {
+            /* Pop the first item from the list of blocks to be processed */
+            let block = toBeProcessed[0];
+            toBeProcessed = toBeProcessed.filter(item => item != block);
+
+            /* Check whether the block is solvable or not */
+            if (block._topology.missingInputs.length == 0) {
+                /* The block is solvable; add it to the solution. */
+                solution.push(block);
+                /* Updated the list of missing inputs for each dependent block */
+                for (let dependent of block._topology.dependents) {
+                    dependent._topology.missingInputs = dependent._topology.missingInputs.filter(item => item != block);
+                }
+            } else {
+                /* The block is not solvable; push it again to the list, as it shall be processed again */
+                toBeProcessed.push(block);
+            }
+
+            counter++;
+            
+            if (counter % (2 * toBeProcessedLength) == 0) {
+                if (toBeProcessedLength == toBeProcessed.length) {
+                    throw new PressenceOfAlgebraicLoop(`Cannot compute the output of ${toBeProcessed}`);
+                } else {
+                    toBeProcessedLength = toBeProcessed.length;
+                }
+            }
+        }
+        return solution;
+    }
 }
 
 let solver = new Solver([
+    sensor,
+    controller,
     actuator,
     plant,
-    sensor,
-    controller
 ], [
     {
         from: { block: plant, signal: angle },
