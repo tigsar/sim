@@ -1,16 +1,16 @@
 import {DynamicBlock} from './../simulation.mjs'
 
 /* Definition of input signals */
-export let commandedDeflection = Symbol('beta_c');
+export const commandedDeflection = Symbol('beta_c');
 
 /* Definition of output and state signals (including its derivatives) */
-export let deflection = Symbol('beta');
-export let deflectionAngularVelocity = Symbol('betaD');
-export let deflectionAngularAcceleration = Symbol('betaDD');
+export const deflection = Symbol('beta');
+export const deflectionAngularVelocity = Symbol('betaD');
+export const deflectionAngularAcceleration = Symbol('betaDD');
 
 /* Definition of parameter signals */
-export let actuatorNaturalFrequency = Symbol('omega_s');
-export let actuatorDampingRatio = Symbol('zeta_s');
+export const actuatorNaturalFrequency = Symbol('omega_s');
+export const actuatorDampingRatio = Symbol('zeta_s');
 
 export class Block extends DynamicBlock {
     constructor(parameter, initialCondition) {

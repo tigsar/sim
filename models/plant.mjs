@@ -1,17 +1,17 @@
 import {DynamicBlock} from './../simulation.mjs'
 
 /* Definition of input signals */
-export let deflection = Symbol('beta');
+export const deflection = Symbol('beta');
 
 /* Definition of output and state signals (including its derivatives) */
-export let angle = Symbol('theta');
-export let angularVelocity = Symbol('thetaD');
-export let angularAcceleration = Symbol('thetaDD');
+export const angle = Symbol('theta');
+export const angularVelocity = Symbol('thetaD');
+export const angularAcceleration = Symbol('thetaDD');
 
 /* Definition of parameter signals */
-export let momentOfInertia = Symbol('I');
-export let arm = Symbol('l');
-export let thrust = Symbol('T');
+export const momentOfInertia = Symbol('I');
+export const arm = Symbol('l');
+export const thrust = Symbol('T');
 
 export class Block extends DynamicBlock {
     constructor(parameter, initialCondition) {
