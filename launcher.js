@@ -23,6 +23,7 @@ let measuredAngle = Symbol('theta_m');
 
 class MissingSymbol extends Error {};
 class MissingDerivative extends Error {};
+class NotSupportedBlockType extends Error {};
 
 function checkSymbol(obj, symbol) {
     if (!(symbol in obj))
@@ -221,6 +222,77 @@ let controller = new ProportionalController({
     [controllerGain]: -1,
     [reference]: 0
 });
+
+class Solver {
+    constructor(blocks, links) {
+        this.blocks = blocks;
+        this.links = links;
+    }
+
+    solve() {
+        /* It is assumed that the blocks are ordered in a proper order */
+        for (let block of this.blocks) {
+            block._solver = block._solver || {};
+
+            /* Compute the output of the block */
+            if (block instanceof DynamicBlock) {
+                /* Dynamic Blocks do not need the current cycle's input to calculate the output */
+                block._solver.output = block.output();
+            } else if (block instanceof DirectBlock) {
+                /* Direct Blocks need the current cycle's input to calculate the output */
+                block._solver.output = block.output(block._solver.input);
+            } else {
+                throw new NotSupportedBlockType(`The solver does not support ${block} type blocks`);
+            }
+
+            /* For each block output signal, propagate the signal until next immediate blocks's inputs */
+            for (let outputSignal of Object.getOwnPropertySymbols(block._solver.output)) {
+                let wiring = this._getSignalWiring(block, outputSignal);
+                for (let wire of wiring) {
+                    wire.block._solver = wire.block._solver || {};
+                    wire.block._solver.input = wire.block._solver.input || {};
+                    wire.block._solver.input[wire.signal] = block._solver.output[outputSignal];
+                }
+            }
+        }
+    }
+    
+    _getSignalWiring(block, signal) {
+        let output = [];
+        for (let link of this.links) {
+            if (link.from.block == block && link.from.signal == signal) {
+                output.push(link.to);
+            }
+        }
+        return output;
+    }
+}
+
+let solver = new Solver([
+    actuator,
+    plant,
+    sensor,
+    controller
+], [
+    {
+        from: { block: plant, signal: angle },
+        to: { block: sensor, signal: angle }
+    },
+    {
+        from: { block: sensor, signal: measuredAngle },
+        to: { block: controller, signal: measuredAngle }
+    },
+    {
+        from: { block: controller, signal: commandedDeflection },
+        to: { block: actuator, signal: commandedDeflection }
+    },
+    {
+        from: { block: actuator, signal: deflection },
+        to: { block: plant, signal: deflection }
+    }
+]);
+
+solver.solve();
 
 let plantIntegrator = new SimpleIntegrator(plant, 0.01);
 let actuatorIntegrator = new SimpleIntegrator(actuator, 0.01);
