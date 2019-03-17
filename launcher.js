@@ -1,4 +1,4 @@
-/* Definition of the symbols */
+/* Definition of the signals */
 let momentOfInertia = Symbol('I');
 let arm = Symbol('l');
 let thrust = Symbol('T');
@@ -21,13 +21,13 @@ let bias = Symbol('b');
 let noiseVariance = Symbol('sigma');
 let measuredAngle = Symbol('theta_m');
 
-class MissingSymbol extends Error {};
+class MissingSignal extends Error {};
 class MissingDerivative extends Error {};
 class NotSupportedBlockType extends Error {};
 
-function checkSymbol(obj, symbol) {
-    if (!(symbol in obj))
-        throw new MissingSymbol(`${symbol.toString()} is missing`);
+function checkSignal(bus, signal) {
+    if (!bus || !(signal in bus))
+        throw new MissingSignal(`${signal.toString()} is not found in the bus`);
 }
 
 class CommonBlock {
@@ -41,19 +41,19 @@ class CommonBlock {
 
     checkInput(input) {
         for (let signal of this.inputSignals) {
-            checkSymbol(input, signal);
+            checkSignal(input, signal);
         }
     }
 
     checkOutput(output) {
         for (let signal of this.outputSignals) {
-            checkSymbol(output, signal);
+            checkSignal(output, signal);
         }
     }
 
     checkParameter(parameter) {
         for (let signal of this.parameterSignals) {
-            checkSymbol(parameter, signal);
+            checkSignal(parameter, signal);
         }
     }
 }
@@ -72,7 +72,7 @@ class DynamicBlock extends CommonBlock {
 
     checkState(state) {
         for (let signal of this.stateSignals) {
-            checkSymbol(state, signal);
+            checkSignal(state, signal);
         }
     }
 }
@@ -251,12 +251,12 @@ class Solver {
     _integrate(block) {
         let input = block._solver.input;
         let derivative = block.derivative(input);
-        for (let symbol of Object.getOwnPropertySymbols(block.state)) { /* Iterate all symbols of the state */
+        for (let signal of Object.getOwnPropertySymbols(block.state)) { /* Iterate all signal of the state */
             let derivativeOf = block.derivativesDef;
-            if (symbol in derivativeOf) {
-                block.state[symbol] += derivative[derivativeOf[symbol]] * this.dt;
+            if (signal in derivativeOf) {
+                block.state[signal] += derivative[derivativeOf[signal]] * this.dt;
             } else {
-                throw new MissingDerivative(`Cannot find the derivative of ${symbol.toString()}`);
+                throw new MissingDerivative(`Cannot find the derivative of ${signal.toString()}`);
             }
         }
     }
