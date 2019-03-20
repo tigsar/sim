@@ -1,7 +1,7 @@
-class MissingSignal extends Error {};
-class MissingDerivative extends Error {};
-class NotSupportedBlockType extends Error {};
-class PressenceOfAlgebraicLoop extends Error {};
+class MissingSignal extends Error {}
+class MissingDerivative extends Error {}
+class NotSupportedBlockType extends Error {}
+class PressenceOfAlgebraicLoop extends Error {}
 
 class CommonBlock {
     constructor(name, inputSignals, outputSignals, parameterSignals, parameter) {
@@ -56,7 +56,7 @@ export class DynamicBlock extends CommonBlock {
 }
 
 export function checkSignal(bus, signal) {
-    if (!bus || !(signal in bus))
+    if (!bus || !(signal in bus))
         throw new MissingSignal(`${signal.toString()} is not found in the bus`);
 }
 
@@ -90,7 +90,7 @@ export class Solver {
             for (let outputSignal of Object.getOwnPropertySymbols(block._solver.output)) {
                 let wiring = this._getSignalWiring(block, outputSignal);
                 for (let wire of wiring) {
-                    wire.block._solver = wire.block._solver || {};
+                    wire.block._solver = wire.block._solver || {};
                     wire.block._solver.input = wire.block._solver.input || {};
                     wire.block._solver.input[wire.signal] = block._solver.output[outputSignal];
                 }
@@ -158,7 +158,7 @@ export class Solver {
     _checkAlgebraicLoops() {
         /* Calculate the dependencies and dependents */
         for (let block of this.blocks) {
-            block._topology = block._topology || {};
+            block._topology = block._topology || {};
             if (block instanceof DirectBlock) {
                 block._topology.missingInputs = this._getDependencies(block);
             } else {
@@ -188,7 +188,7 @@ export class Solver {
 
         /* Calculate the dependencies and dependents */
         for (let block of this.blocks) {
-            block._topology = block._topology || {};
+            block._topology = block._topology || {};
             if (block instanceof DirectBlock) {
                 block._topology.missingInputs = this._getDependencies(block);
             } else {

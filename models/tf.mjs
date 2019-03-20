@@ -7,7 +7,7 @@ const den = Symbol('denominator coefficients');
 /* Definition of output and state signals (including its derivatives) */
 const lastStateDerivative = Symbol('last state derivative');
 
-class MalformedTransferFunction extends Error {};
+class MalformedTransferFunction extends Error {}
 
 /**
  * In what follows we will be assuming that the numerator's degree will be
