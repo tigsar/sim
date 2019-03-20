@@ -76,7 +76,7 @@ export class Block extends DynamicBlock {
             d[this.stateSignalById[i]] = this.state[this.stateSignalById[i]];
         }
         let lastDerivative = 0.0;
-        let a = this.parameter[num];
+        let a = this.parameter[den];
         for (let i = 1; i <= this.n; ++i) {
             lastDerivative -= this.state[this.stateSignalById[i]] * a[this.n - i + 1];
         }
@@ -87,7 +87,7 @@ export class Block extends DynamicBlock {
 
     output() {
         let out = 0.0;
-        let b = this.parameter[den];
+        let b = this.parameter[num];
         for (let i = 1; i <= this.n; ++i) {
             out += this.state[this.stateSignalById[i]] * b[i];
         }
