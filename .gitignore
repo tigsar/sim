@@ -1,0 +1,8 @@
+node_modules
+slprj
+*.pdf
+*.pptx
+*.slx
+*.slxc
+*.m
+.DS_Store
