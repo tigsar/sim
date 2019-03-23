@@ -1,4 +1,4 @@
-import {DirectBlock} from './../simulation.mjs'
+import {DirectBlock} from './../simulation'
 
 /* Definition of input signals */
 export const angle = Symbol('theta');

@@ -1,4 +1,4 @@
-import {DynamicBlock} from './../simulation.mjs'
+import {DynamicBlock} from './../simulation'
 
 /* Definition of input signals */
 export const commandedDeflection = Symbol('beta_c');

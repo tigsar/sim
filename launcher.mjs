@@ -1,8 +1,8 @@
-import * as Actuator from './models/actuator.mjs';
-import * as Plant from './models/plant.mjs';
-import * as Controller from './models/controller.mjs';
-import * as Sensor from './models/sensor.mjs';
-import {Solver, Logger} from './simulation.mjs';
+import * as Actuator from './models/actuator';
+import * as Plant from './models/plant';
+import * as Controller from './models/controller';
+import * as Sensor from './models/sensor';
+import {Solver, Logger} from './simulation';
 
 let plant = new Plant.Block({
     [Plant.momentOfInertia]: 10,
