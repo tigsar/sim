@@ -1,4 +1,4 @@
-import {DirectBlock} from './../simulation'
+import {DirectBlock} from './base'
 
 /* Definition of input signals */
 export const angle = Symbol('theta');

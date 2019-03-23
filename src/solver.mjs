@@ -1,65 +1,8 @@
-class MissingSignal extends Error {}
+import {DirectBlock, DynamicBlock} from './models/base';
+
 class MissingDerivative extends Error {}
 class NotSupportedBlockType extends Error {}
 class PressenceOfAlgebraicLoop extends Error {}
-
-class CommonBlock {
-    constructor(name, inputSignals, outputSignals, parameterSignals, parameter) {
-        this.name = name;
-        this.parameterSignals = parameterSignals;
-        this.checkParameter(parameter);
-        this.parameter = parameter;
-        this.inputSignals = inputSignals;
-        this.outputSignals = outputSignals;
-    }
-
-    checkInput(input) {
-        for (let signal of this.inputSignals) {
-            checkSignal(input, signal);
-        }
-    }
-
-    checkOutput(output) {
-        for (let signal of this.outputSignals) {
-            checkSignal(output, signal);
-        }
-    }
-
-    checkParameter(parameter) {
-        for (let signal of this.parameterSignals) {
-            checkSignal(parameter, signal);
-        }
-    }
-
-    toString() {
-        return this.name;
-    }
-}
-
-export class DirectBlock extends CommonBlock { }
-
-export class DynamicBlock extends CommonBlock {
-    constructor(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef, inputRequired) {
-        super(name, inputSignals, outputSignals, parameterSignals, parameter);
-        this.stateSignals = stateSignals;
-        this.checkState(initialCondition);
-        this.state = initialCondition;
-        this.derivativesDef = derivativesDef;
-        this.inputRequired = inputRequired; /* if true it means that input bus is needed for output evaluation */
-        this.time = 0;
-    }
-
-    checkState(state) {
-        for (let signal of this.stateSignals) {
-            checkSignal(state, signal);
-        }
-    }
-}
-
-export function checkSignal(bus, signal) {
-    if (!bus || !(signal in bus))
-        throw new MissingSignal(`${signal.toString()} is not found in the bus`);
-}
 
 export class Solver {
     constructor(blocks, links, dt) {
@@ -237,30 +180,5 @@ export class Solver {
             }
         }
         return solution;
-    }
-}
-
-export class Logger {
-    constructor() {
-        this.firstTime = true;
-    }
-    log(t, buses) {
-        let header = "t,", data = "";
-        data += t + ",";
-        let processedSignal = {};
-        for (let bus of buses) {
-            for (let signal of Object.getOwnPropertySymbols(bus)) {
-                if (!(signal in processedSignal)) {
-                    processedSignal[signal] = true;
-                    if (this.firstTime) header += signal.toString() + ",";
-                    data += bus[signal] + ",";
-                }
-            }
-        }
-        if (this.firstTime) {
-            console.log(header);
-            this.firstTime = false;
-        }
-        console.log(data);
     }
 }

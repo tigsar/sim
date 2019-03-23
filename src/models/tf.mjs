@@ -1,4 +1,4 @@
-import {DynamicBlock} from './../simulation'
+import {DynamicBlock} from './base'
 
 /* Definition of parameter signals */
 const num = Symbol('numerator coefficients');

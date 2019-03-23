@@ -1,5 +1,5 @@
 import * as Tf from './models/tf';
-import {Solver, PressenceOfAlgebraicLoop} from './simulation';
+import {Solver, PressenceOfAlgebraicLoop} from './solver';
 
 const inputSignal = Symbol('Input signal');
 const outputSignal = Symbol('Output signal');

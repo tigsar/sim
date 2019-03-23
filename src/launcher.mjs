@@ -2,7 +2,32 @@ import * as Actuator from './models/actuator';
 import * as Plant from './models/plant';
 import * as Controller from './models/controller';
 import * as Sensor from './models/sensor';
-import {Solver, Logger} from './simulation';
+import {Solver} from './solver';
+
+class Logger {
+    constructor() {
+        this.firstTime = true;
+    }
+    log(t, buses) {
+        let header = "t,", data = "";
+        data += t + ",";
+        let processedSignal = {};
+        for (let bus of buses) {
+            for (let signal of Object.getOwnPropertySymbols(bus)) {
+                if (!(signal in processedSignal)) {
+                    processedSignal[signal] = true;
+                    if (this.firstTime) header += signal.toString() + ",";
+                    data += bus[signal] + ",";
+                }
+            }
+        }
+        if (this.firstTime) {
+            console.log(header);
+            this.firstTime = false;
+        }
+        console.log(data);
+    }
+}
 
 let plant = new Plant.Block({
     [Plant.momentOfInertia]: 10,

@@ -1,4 +1,4 @@
-import {DynamicBlock} from './../simulation'
+import {DynamicBlock} from './base'
 
 /* Definition of input signals */
 export const deflection = Symbol('beta');
