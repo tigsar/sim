@@ -1,0 +1,36 @@
+{
+  "name": "siglab",
+  "version": "1.0.0",
+  "description": "Signal Laboratory",
+  "main": "launcher",
+  "dependencies": {
+    "csv-writer": "^1.2.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.2",
+    "eslint": "^5.15.3",
+    "eslint-plugin-jest": "^22.4.1",
+    "jest": "^24.5.0"
+  },
+  "scripts": {
+    "test": "jest --verbose",
+    "build": "babel src -d lib"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tigsar/sim.git"
+  },
+  "author": "Tigran Sargsyan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tigsar/sim/issues"
+  },
+  "homepage": "https://github.com/tigsar/sim#readme"
+}
