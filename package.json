@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "Signal Laboratory",
   "main": "launcher",
-  "dependencies": {
-    "csv-writer": "^1.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.4.0",
