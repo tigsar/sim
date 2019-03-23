@@ -1,4 +1,4 @@
-import * as Tf from './models/tf';
+import * as Tf from './blocks/tf';
 import {Solver, PressenceOfAlgebraicLoop} from './solver';
 
 const inputSignal = Symbol('Input signal');

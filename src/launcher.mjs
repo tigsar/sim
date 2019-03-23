@@ -1,7 +1,7 @@
-import * as Actuator from './models/actuator';
-import * as Plant from './models/plant';
-import * as Controller from './models/controller';
-import * as Sensor from './models/sensor';
+import * as Actuator from './blocks/actuator';
+import * as Plant from './blocks/plant';
+import * as Controller from './blocks/controller';
+import * as Sensor from './blocks/sensor';
 import {Solver} from './solver';
 
 class Logger {

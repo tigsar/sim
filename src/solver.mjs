@@ -1,4 +1,4 @@
-import {DirectBlock, DynamicBlock} from './models/base';
+import {DirectBlock, DynamicBlock} from './blocks/base';
 
 class MissingDerivative extends Error {}
 class NotSupportedBlockType extends Error {}
