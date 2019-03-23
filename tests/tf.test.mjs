@@ -1,4 +1,4 @@
-import * as Tf from './../models/tf';
+import * as Tf from './models/tf';
 
 const inputSignal = Symbol('Input signal');
 const outputSignal = Symbol('Output signal');
