@@ -24,7 +24,8 @@ export class Block extends DynamicBlock {
             initialCondition, {
                 [deflection]: deflectionAngularVelocity,
                 [deflectionAngularVelocity]: deflectionAngularAcceleration
-            }
+            },
+            false
         );
     }
 

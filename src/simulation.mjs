@@ -39,12 +39,13 @@ class CommonBlock {
 export class DirectBlock extends CommonBlock { }
 
 export class DynamicBlock extends CommonBlock {
-    constructor(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef) {
+    constructor(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef, inputRequired) {
         super(name, inputSignals, outputSignals, parameterSignals, parameter);
         this.stateSignals = stateSignals;
         this.checkState(initialCondition);
         this.state = initialCondition;
         this.derivativesDef = derivativesDef;
+        this.inputRequired = inputRequired; /* if true it means that input bus is needed for output evaluation */
         this.time = 0;
     }
 
@@ -77,8 +78,12 @@ export class Solver {
 
             /* Compute the output of the block */
             if (block instanceof DynamicBlock) {
-                /* Dynamic Blocks do not need the current cycle's input to calculate the output */
-                block._solver.output = block.output();
+                /* Dynamic Blocks may need or may need not require the input for output evaluation */
+                if (block.inputRequired) {
+                    block._solver.output = block.output(block._solver.input);
+                } else {
+                    block._solver.output = block.output();
+                }
             } else if (block instanceof DirectBlock) {
                 /* Direct Blocks need the current cycle's input to calculate the output */
                 block._solver.output = block.output(block._solver.input);
@@ -161,8 +166,14 @@ export class Solver {
             block._topology = block._topology || {};
             if (block instanceof DirectBlock) {
                 block._topology.missingInputs = this._getDependencies(block);
+            } else if (block instanceof DynamicBlock) {
+                if (block.inputRequired) {
+                    block._topology.missingInputs = this._getDependencies(block);
+                } else {
+                    block._topology.missingInputs = [];
+                }
             } else {
-                block._topology.missingInputs = [];
+                throw new NotSupportedBlockType(`The solver does not support ${block} type blocks`);
             }
             block._topology.dependents = this._getDependents(block);
         }
@@ -170,7 +181,7 @@ export class Solver {
         /* Check there is no algebraic loops in the topology */
         for (let block of this.blocks) {
             if (block._topology.missingInputs.length > 0) {
-                throw new PressenceOfAlgebraicLoop(`Cannot compute the output of ${block} because ${block._topology.missingInput} shall be calculated first`);
+                throw new PressenceOfAlgebraicLoop(`Cannot compute the output of ${block} because ${block._topology.missingInputs} shall be calculated first`);
             }
             
             /* Updated the list of missing inputs for each dependent block */

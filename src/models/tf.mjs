@@ -11,30 +11,31 @@ class MalformedTransferFunction extends Error {}
 
 /**
  * In what follows we will be assuming that the numerator's degree will be
- * always smaller than the denominator's degree:
+ * always smaller or equal than the denominator's degree:
  * Y(s) / U(s) = numerator / denominator
  * 
- * numerator   =       b1 * s^(n-1) + ... + b_(n-1) * s + b_n
- * denominator = s^n + a1 * s^(n-1) + ... + a_(n-1) * s + a_n
+ * numerator   = b0 * s^n + b1 * s^(n-1) + ... + b_(n-1) * s + b_n
+ * denominator =      s^n + a1 * s^(n-1) + ... + a_(n-1) * s + a_n
  * 
  * The user provides the numerator and denominator arrays as follows:
- * numerator   = [ b1, ..., bn ] of dimension n
+ * numerator   = [ b0, b1, ..., bn ] of dimension n + 1
  * denominator = [ a1, ..., an ] of dimension n
  */
 export class Block extends DynamicBlock {
     constructor(name, inputSignal, outputSignal, numerator, denominator) {
         /* Denominator degree shall be bigger than the numerator degree */
         let n = denominator.length;
-        if (numerator.length > n) {
-            throw new MalformedTransferFunction(`Denominator degree shall be bigger than the numerator degree`);
+        if (n == 0 || numerator.length != (n + 1)) {
+            throw new MalformedTransferFunction(`Denominator degree shall be bigger or equal than the numerator degree`);
         }
 
         /* Convert numerator and denominator */
         let denS = {}, numS = {};
         for (let i = 1; i <= n; ++i) {
             denS[i] = denominator[i - 1];
-            numS[i] = numerator[i - 1];
+            numS[i - 1] = numerator[i - 1];
         }
+        numS[n] = numerator[n];
 
         /* There will be n state signals with zero initial condition */
         let stateSignals = [];
@@ -61,7 +62,8 @@ export class Block extends DynamicBlock {
             [ num, den ], /* Parameter signals */
             { [num]: numS, [den]: denS },
             initialCondition,
-            derivativesDef);
+            derivativesDef,
+            numS[0] != 0);
         
         this.inputSignal = inputSignal;
         this.outputSignal = outputSignal;
@@ -85,11 +87,17 @@ export class Block extends DynamicBlock {
         return d;
     }
 
-    output() {
+    output(input) {
         let out = 0.0;
+        let a = this.parameter[den];
         let b = this.parameter[num];
         for (let i = 1; i <= this.n; ++i) {
-            out += this.state[this.stateSignalById[i]] * b[i];
+            out += this.state[this.stateSignalById[i]] * (b[i] - a[i] * b[0]);
+        }
+        
+        if (this.inputRequired) {
+            this.checkInput(input);
+            out += b[0] * input[this.inputSignal];
         }
         return {
             [this.outputSignal]: out

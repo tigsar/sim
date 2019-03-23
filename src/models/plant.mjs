@@ -25,7 +25,8 @@ export class Block extends DynamicBlock {
             initialCondition, {
                 [angle]: angularVelocity,
                 [angularVelocity]: angularAcceleration
-            }
+            },
+            false
         );
     }
 
