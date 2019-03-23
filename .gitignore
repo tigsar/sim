@@ -7,3 +7,4 @@ slprj
 *.slxc
 *.m
 .DS_Store
+package-lock.json
