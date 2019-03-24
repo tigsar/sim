@@ -1,4 +1,4 @@
-import {DynamicBlock} from './base'
+import {StateSpaceBlock} from './base'
 
 /* Definition of parameter signals */
 const num = Symbol('numerator coefficients');
@@ -21,7 +21,7 @@ class MalformedTransferFunction extends Error {}
  * numerator   = [ b0, b1, ..., bn ] of dimension n + 1
  * denominator = [ a1, ..., an ] of dimension n
  */
-export class Block extends DynamicBlock {
+export class Block extends StateSpaceBlock {
     constructor(name, inputSignal, outputSignal, numerator, denominator) {
         /* Denominator degree shall be bigger than the numerator degree */
         let n = denominator.length;

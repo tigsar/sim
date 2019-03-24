@@ -1,4 +1,4 @@
-import {DirectBlock, DynamicBlock} from './blocks/base';
+import {DirectBlock, StateBlock} from './blocks/base';
 
 class MissingDerivative extends Error {}
 class NotSupportedBlockType extends Error {}
@@ -20,8 +20,8 @@ export class Solver {
             block._solver = block._solver || {};
 
             /* Compute the output of the block */
-            if (block instanceof DynamicBlock) {
-                /* Dynamic Blocks may need or may need not require the input for output evaluation */
+            if (block instanceof StateBlock) {
+                /* State Blocks may need or may need not require the input for output evaluation */
                 if (block.inputRequired) {
                     block._solver.output = block.output(block._solver.input);
                 } else {
@@ -49,7 +49,7 @@ export class Solver {
     update() {
         /* For blocks with an internal dynamic state, update the internal state (prepare for the next iteration) */
         for (let block of this.blocks) {
-            if (block instanceof DynamicBlock) {
+            if (block instanceof StateBlock) {
                 this._integrate(block);
             }
         }
@@ -109,7 +109,7 @@ export class Solver {
             block._topology = block._topology || {};
             if (block instanceof DirectBlock) {
                 block._topology.missingInputs = this._getDependencies(block);
-            } else if (block instanceof DynamicBlock) {
+            } else if (block instanceof StateBlock) {
                 if (block.inputRequired) {
                     block._topology.missingInputs = this._getDependencies(block);
                 } else {
@@ -145,7 +145,7 @@ export class Solver {
             block._topology = block._topology || {};
             if (block instanceof DirectBlock) {
                 block._topology.missingInputs = this._getDependencies(block);
-            } else if (block instanceof DynamicBlock) {
+            } else if (block instanceof StateBlock) {
                 if (block.inputRequired) {
                     block._topology.missingInputs = this._getDependencies(block);
                 } else {

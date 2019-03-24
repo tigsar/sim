@@ -1,4 +1,4 @@
-import {DynamicBlock} from './base'
+import {StateSpaceBlock} from './base'
 
 /* Definition of input signals */
 export const deflection = Symbol('beta');
@@ -13,7 +13,7 @@ export const momentOfInertia = Symbol('I');
 export const arm = Symbol('l');
 export const thrust = Symbol('T');
 
-export class Block extends DynamicBlock {
+export class Block extends StateSpaceBlock {
     constructor(parameter, initialCondition) {
         super(
             "Plant",

@@ -39,13 +39,12 @@ class CommonBlock {
 
 export class DirectBlock extends CommonBlock { }
 
-export class DynamicBlock extends CommonBlock {
-    constructor(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef, inputRequired) {
+export class StateBlock extends CommonBlock {
+    constructor(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, inputRequired) {
         super(name, inputSignals, outputSignals, parameterSignals, parameter);
         this.stateSignals = stateSignals;
         this.checkState(initialCondition);
         this.state = initialCondition;
-        this.derivativesDef = derivativesDef;
         this.inputRequired = inputRequired; /* if true it means that input bus is needed for output evaluation */
         this.time = 0;
     }
@@ -54,5 +53,12 @@ export class DynamicBlock extends CommonBlock {
         for (let signal of this.stateSignals) {
             checkSignal(state, signal);
         }
+    }
+}
+
+export class StateSpaceBlock extends StateBlock {
+    constructor(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, derivativesDef, inputRequired) {
+        super(name, inputSignals, outputSignals, stateSignals, parameterSignals, parameter, initialCondition, inputRequired);
+        this.derivativesDef = derivativesDef;
     }
 }

@@ -1,4 +1,4 @@
-import {DynamicBlock} from './base'
+import {StateSpaceBlock} from './base'
 
 /* Definition of input signals */
 export const commandedDeflection = Symbol('beta_c');
@@ -12,7 +12,7 @@ export const deflectionAngularAcceleration = Symbol('betaDD');
 export const actuatorNaturalFrequency = Symbol('omega_s');
 export const actuatorDampingRatio = Symbol('zeta_s');
 
-export class Block extends DynamicBlock {
+export class Block extends StateSpaceBlock {
     constructor(parameter, initialCondition) {
         super(
             "Actuator",
