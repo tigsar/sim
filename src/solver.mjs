@@ -145,8 +145,14 @@ export class Solver {
             block._topology = block._topology || {};
             if (block instanceof DirectBlock) {
                 block._topology.missingInputs = this._getDependencies(block);
+            } else if (block instanceof DynamicBlock) {
+                if (block.inputRequired) {
+                    block._topology.missingInputs = this._getDependencies(block);
+                } else {
+                    block._topology.missingInputs = [];
+                }
             } else {
-                block._topology.missingInputs = [];
+                throw new NotSupportedBlockType(`The solver does not support ${block} type blocks`);
             }
             block._topology.dependents = this._getDependents(block);
         }
