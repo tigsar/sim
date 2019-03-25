@@ -1,17 +1,17 @@
 import {DirectBlock, StateBlock} from './blocks/base';
+import {gcd, lcm} from './utils'
 
-class MissingDerivative extends Error {}
 class NotSupportedBlockType extends Error {}
 class PressenceOfAlgebraicLoop extends Error {}
 
 export class Solver {
-    constructor(blocks, links, dt) {
+    constructor(blocks, links, defaultUpdatePeriod) {
         this.blocks = blocks;
         this.links = links;
-        this.dt = dt;
         this.time = 0;
         this.blocks = this._resolveOrder();
         this._checkAlgebraicLoops();
+        this._computeUpdatePeriods(defaultUpdatePeriod);
     }
 
     solve() {
@@ -50,23 +50,10 @@ export class Solver {
         /* For blocks with an internal dynamic state, update the internal state (prepare for the next iteration) */
         for (let block of this.blocks) {
             if (block instanceof StateBlock) {
-                this._integrate(block);
+                block.update(block._solver.input);
             }
         }
-        this.time += this.dt;
-    }
-
-    _integrate(block) {
-        let input = block._solver.input;
-        let derivative = block.derivative(input);
-        for (let signal of Object.getOwnPropertySymbols(block.state)) { /* Iterate all signal of the state */
-            let derivativeOf = block.derivativesDef;
-            if (signal in derivativeOf) {
-                block.state[signal] += derivative[derivativeOf[signal]] * this.dt;
-            } else {
-                throw new MissingDerivative(`Cannot find the derivative of ${signal.toString()}`);
-            }
-        }
+        this.time += this.minorFramePeriod;
     }
     
     _getSignalWiring(block, signal) {
@@ -186,5 +173,29 @@ export class Solver {
             }
         }
         return solution;
+    }
+
+    _computeUpdatePeriods(defaultUpdatePeriod) {
+        /* Compute the minor and major frames periods */
+        const updatePeriods = [];
+        for (const block of this.blocks) {
+            if (block.updatePeriod === undefined) continue;
+            updatePeriods.push(block.updatePeriod);
+        }
+        if (updatePeriods.length !== 0) {
+            this.minorFramePeriod = gcd(updatePeriods);
+            this.majorFramePeriod = lcm(updatePeriods);
+        } else {
+            /* If no period is specified, then run at the default update period */
+            this.minorFramePeriod = defaultUpdatePeriod;
+            this.majorFramePeriod = defaultUpdatePeriod;
+        }
+
+        /* Run blocks with undefined update period at minor frame period */
+        for (const block of this.blocks) {
+            if (block.updatePeriod === undefined) {
+                block.updatePeriod = this.minorFramePeriod;
+            }
+        }
     }
 }
