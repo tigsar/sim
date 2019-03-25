@@ -8,6 +8,7 @@ export class Solver {
     constructor(blocks, links, defaultUpdatePeriod) {
         this.blocks = blocks;
         this.links = links;
+        this.counter = 0;
         this.time = 0;
         this.blocks = this._resolveOrder();
         this._checkAlgebraicLoops();
@@ -18,6 +19,9 @@ export class Solver {
         /* It is assumed that the blocks are ordered in a proper order */
         for (let block of this.blocks) {
             block._solver = block._solver || {};
+
+            /* Solve the block if it is ready */
+            if (!this._isReady(block)) continue;
 
             /* Compute the output of the block */
             if (block instanceof StateBlock) {
@@ -49,11 +53,12 @@ export class Solver {
     update() {
         /* For blocks with an internal dynamic state, update the internal state (prepare for the next iteration) */
         for (let block of this.blocks) {
-            if (block instanceof StateBlock) {
+            if (block instanceof StateBlock && this._isReady(block)) {
                 block.update(block._solver.input);
             }
         }
-        this.time += this.minorFramePeriod;
+        this.counter++;
+        this.time = this.counter * this.minorFramePeriod;
     }
     
     _getSignalWiring(block, signal) {
@@ -191,11 +196,17 @@ export class Solver {
             this.majorFramePeriod = defaultUpdatePeriod;
         }
 
-        /* Run blocks with undefined update period at minor frame period */
+        /* Set blocks relative (wrt the minor frame) update period */
         for (const block of this.blocks) {
+            /* Run blocks with undefined update period at minor frame period */
             if (block.updatePeriod === undefined) {
                 block.updatePeriod = this.minorFramePeriod;
             }
+            block.relativeUpdatePeriod = block.updatePeriod / this.minorFramePeriod;
         }
+    }
+
+    _isReady(block) {
+        return this.counter % block.relativeUpdatePeriod == 0;
     }
 }
