@@ -23,10 +23,7 @@ export class Block extends StateBlock {
     }
 
     update() {
-        ++this.state[current];
-        if (this.state[current] > this.parameter[maxValue]) {
-            this.state[current] = 0;
-        }
+        this.state[current] = ++this.state[current] % (this.parameter[maxValue] + 1);
     }
 
     output() {
