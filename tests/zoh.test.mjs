@@ -17,31 +17,31 @@ test('Zero order holder', () => {
     block._solver.input = { [ZeroOrderHold.input]: 0 }; /* u0 */
     expect(block._solver.output[ZeroOrderHold.output]).toBe(0);
 
-    /* n = 1: no change (holds the previous value) */
+    /* n = 1 */
     solver.update(); /* x1 = u0 = 0 */
     solver.solve(); /* y1 = x1 = 0 */
     block._solver.input = { [ZeroOrderHold.input]: 0 }; /* u1 */
     expect(block._solver.output[ZeroOrderHold.output]).toBe(0);
 
-    /* n = 2: no change (holds the previous value) */
+    /* n = 2 */
     solver.update(); /* x2 = u1 = 0 */
     solver.solve(); /* y2 = x2 = 0 */
     block._solver.input = { [ZeroOrderHold.input]: 1 }; /* u2 */
     expect(block._solver.output[ZeroOrderHold.output]).toBe(0);
 
-    /* n = 3: no change (holds the previous value) */
+    /* n = 3 */
     solver.update(); /* x3 = u2 = 1 */
     solver.solve(); /* y3 = x3 = 1 */
     block._solver.input = { [ZeroOrderHold.input]: 2 }; /* u3 */
     expect(block._solver.output[ZeroOrderHold.output]).toBe(1);
 
-    /* n = 4: input is changed */
+    /* n = 4 */
     solver.update(); /* x4 = u3 = 2 */
     solver.solve(); /* y4 = x4 = 2 */
     block._solver.input = { [ZeroOrderHold.input]: -1.1 }; /* u4 */
     expect(block._solver.output[ZeroOrderHold.output]).toBe(2);
 
-    /* n = 5: input is changed */
+    /* n = 5 */
     solver.update(); /* x5 = u4 = -1.1 */
     solver.solve(); /* y5 = x5 = -1.1 */
     block._solver.input = { [ZeroOrderHold.input]: 0 }; /* u5 */
