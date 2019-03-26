@@ -16,7 +16,7 @@ export const output = Symbol('output');
  * denominator = [ a1, ..., an ] = [ 1 / tau ]
  */
 export class Block extends TransferFunction.Block {
-    constructor(name, K, tau) {
-        super(name, input, output, [ 0, K / tau ], [ 1 / tau ]);
+    constructor(name, K, tau, updatePeriod) {
+        super(name, input, output, [ 0, K / tau ], [ 1 / tau ], updatePeriod);
     }
 }

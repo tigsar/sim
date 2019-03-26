@@ -22,7 +22,7 @@ class MalformedTransferFunction extends Error {}
  * denominator = [ a1, ..., an ] of dimension n
  */
 export class Block extends StateSpaceBlock {
-    constructor(name, inputSignal, outputSignal, numerator, denominator) {
+    constructor(name, inputSignal, outputSignal, numerator, denominator, updatePeriod) {
         /* Denominator degree shall be bigger than the numerator degree */
         let n = denominator.length;
         if (n == 0 || numerator.length != (n + 1)) {
@@ -63,7 +63,8 @@ export class Block extends StateSpaceBlock {
             { [num]: numS, [den]: denS },
             initialCondition,
             derivativesDef,
-            numS[0] != 0);
+            numS[0] != 0,
+            updatePeriod);
         
         this.inputSignal = inputSignal;
         this.outputSignal = outputSignal;
