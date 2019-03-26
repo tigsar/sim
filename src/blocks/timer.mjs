@@ -2,7 +2,7 @@ import {StateBlock} from './base'
 
 /* Definition of output and state signals */
 export const output = Symbol('output');
-export const current = Symbol('current');
+const current = Symbol('current');
 
 /* Definition of parameter signals */
 const maxValue = Symbol('max value');
@@ -15,12 +15,8 @@ export class Block extends StateBlock {
             [ output ], /* Output signals */
             [ current ], /* State signals */
             [ maxValue ], /* Parameter signals */
-            {
-                [maxValue]: maximum
-            },
-            {
-                [current]: 0
-            },
+            { [maxValue]: maximum }, /* Parameter bus */
+            { [current]: 0 }, /* Initial condition */
             false,
             updatePeriod
         );
