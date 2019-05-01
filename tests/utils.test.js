@@ -1,4 +1,4 @@
-import {gcd, lcm} from './utils'
+import {gcd, lcm} from './utils.js'
 
 test('gcd', () => {
     expect(gcd([0.25, 0.5])).toBe(0.25);

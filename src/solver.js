@@ -1,5 +1,5 @@
-import {DirectBlock, StateBlock} from './blocks/base';
-import {gcd, lcm} from './utils'
+import {DirectBlock, StateBlock} from './blocks/base.js';
+import {gcd, lcm} from './utils.js'
 
 class NotSupportedBlockType extends Error {}
 class PressenceOfAlgebraicLoop extends Error {}

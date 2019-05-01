@@ -1,4 +1,4 @@
-import {StateSpaceBlock} from './base'
+import {StateSpaceBlock} from './base.js'
 
 /* Definition of input signals */
 export const commandedDeflection = Symbol('beta_c');

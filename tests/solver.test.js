@@ -1,5 +1,5 @@
-import * as Tf from './blocks/tf';
-import {Solver, PressenceOfAlgebraicLoop} from './solver';
+import * as Tf from './blocks/tf.js';
+import {Solver, PressenceOfAlgebraicLoop} from './solver.js';
 
 const inputSignal = Symbol('Input signal');
 const outputSignal = Symbol('Output signal');

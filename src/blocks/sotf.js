@@ -1,4 +1,4 @@
-import * as TransferFunction from './tf';
+import * as TransferFunction from './tf.js';
 
 /* Definition of input signals */
 export const input = Symbol('input');

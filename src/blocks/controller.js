@@ -1,4 +1,4 @@
-import {DirectBlock} from './base'
+import {DirectBlock} from './base.js'
 
 /* Definition of input signals */
 export const measuredAngle = Symbol('theta_m');

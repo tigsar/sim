@@ -1,5 +1,5 @@
-import * as Timer from './blocks/timer';
-import {Solver} from './solver';
+import * as Timer from './blocks/timer.js';
+import {Solver} from './solver.js';
 
 const testTimer = (max, period, cycles) => {
     return () => {

@@ -1,8 +1,8 @@
-import * as Actuator from './blocks/actuator';
-import * as Plant from './blocks/plant';
-import * as Controller from './blocks/controller';
-import * as Sensor from './blocks/sensor';
-import {Solver} from './solver';
+import * as Actuator from './blocks/actuator.js';
+import * as Plant from './blocks/plant.js';
+import * as Controller from './blocks/controller.js';
+import * as Sensor from './blocks/sensor.js';
+import {Solver} from './solver.js';
 
 class Logger {
     constructor() {

@@ -1,30 +1,29 @@
-import {StateBlock} from './base'
-
-/* Definition of input signals */
-export const input = Symbol('input');
+import {StateBlock} from './base.js'
 
 /* Definition of output and state signals */
 export const output = Symbol('output');
 const current = Symbol('current');
 
+/* Definition of parameter signals */
+const maxValue = Symbol('max value');
+
 export class Block extends StateBlock {
-    constructor(name, updatePeriod) {
+    constructor(name, maximum, updatePeriod) {
         super(
             name,
-            [ input ], /* Input signals */
+            [ ], /* Input signals */
             [ output ], /* Output signals */
             [ current ], /* State signals */
-            [ ], /* Parameter signals */
-            { }, /* Parameter bus */
+            [ maxValue ], /* Parameter signals */
+            { [maxValue]: maximum }, /* Parameter bus */
             { [current]: 0 }, /* Initial condition */
             false,
             updatePeriod
         );
     }
 
-    update(inputBus) {
-        this.checkInput(inputBus);
-        this.state[current] = inputBus[input];
+    update() {
+        this.state[current] = ++this.state[current] % (this.parameter[maxValue] + 1);
     }
 
     output() {

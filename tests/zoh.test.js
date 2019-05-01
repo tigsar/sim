@@ -1,5 +1,5 @@
-import * as ZeroOrderHold from './blocks/zoh';
-import {Solver} from './solver';
+import * as ZeroOrderHold from './blocks/zoh.js';
+import {Solver} from './solver.js';
 
 /**
  * Zero Order Hold (ZOH) is described as:

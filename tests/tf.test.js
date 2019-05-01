@@ -1,4 +1,4 @@
-import * as Tf from './blocks/tf';
+import * as Tf from './blocks/tf.js';
 
 const inputSignal = Symbol('Input signal');
 const outputSignal = Symbol('Output signal');

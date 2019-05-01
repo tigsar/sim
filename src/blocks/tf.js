@@ -1,4 +1,4 @@
-import {StateSpaceBlock} from './base'
+import {StateSpaceBlock} from './base.js'
 
 /* Definition of parameter signals */
 const num = Symbol('numerator coefficients');
