@@ -3,18 +3,18 @@
   "version": "1.0.0",
   "description": "Signal Laboratory",
   "main": "launcher",
-  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.4.0",
     "@babel/preset-env": "^7.4.2",
     "eslint": "^5.15.3",
     "eslint-plugin-jest": "^22.4.1",
-    "jest": "^24.5.0"
+    "jest": "^24.5.0",
+    "http-server": "^0.11.1"
   },
   "scripts": {
-    "test": "jest --verbose",
-    "build": "babel src tests examples -d lib"
+    "test": "jest --verbose dist",
+    "build": "babel src tests examples -d dist"
   },
   "jest": {
     "transform": {
