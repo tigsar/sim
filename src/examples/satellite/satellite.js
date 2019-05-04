@@ -1,58 +1,8 @@
-class Trace {
-    constructor(maxPoints, material, scene) {
-        this.MAX_POINTS = maxPoints;
-        this.geometry = new THREE.BufferGeometry();
-        this.positions = new Float32Array(this.MAX_POINTS * 3); // 3 vertices per point
-        this.geometry.addAttribute('position', new THREE.BufferAttribute(this.positions, 3));
-        this.geometry.setDrawRange(0, 0);
-        this.scene = scene;
-        this.line = new THREE.Line(this.geometry, material);
-        this.scene.add(this.line)
-        this.index = 0;
-        this.nbPoints = 0;
-    }
-    add({x, y, z}) {
-        this.positions[this.index] = x;
-        this.positions[this.index + 1] = y;
-        this.positions[this.index + 2] = z;
-        this.index += 3;
-        this.nbPoints++;
-        this.line.geometry.setDrawRange(0, this.nbPoints);
-    }
-    update() {
-        this.line.geometry.attributes.position.needsUpdate = true; // required after the first render
-    }
-}
-class AttitudeDynamics {
-    constructor(ix, iy, iz, omega0) {
-        this.ix = ix;
-        this.iy = iy;
-        this.iz = iz;
-        this.omega0 = omega0;
-    }
-    derivative(time, [phi, theta, psi, phiD, thetaD, psiD], [tdx, tdy, tdz]) {
-        return [
-            phiD,
-            thetaD,
-            psiD,
-            (tdx - 4 * Math.pow(this.omega0, 2) * (this.iy - this.iz) * phi + this.omega0 * (this.ix + this.iz - this.iy) * psiD) / this.ix,
-            (tdy - 3 * Math.pow(this.omega0, 2) * (this.ix - this.iz) * theta) / this.iy,
-            (tdz - Math.pow(this.omega0, 2) * (this.iy - this.ix) * psi - this.omega0 * (this.iz + this.ix - this.iy) * phiD) / this.iz,
-        ];
-    }
-}
-class ModelPropagator {
-    constructor(model, initialState, timeStep) {
-        this.model = model;
-        this.time = 0;
-        this.state = initialState;
-        this.timeStep = timeStep;
-    }
-    step(input) {
-        this.state = math.add(this.state, math.multiply(this.model.derivative(this.time, this.state, input), this.timeStep));
-        this.time += this.timeStep;
-    }
-}
+import Trace from './trace.js'
+import AttitudeDynamics from './attitude-dynamics.js'
+import ModelPropagator from './model-propagator.js'
+import buildGlobe from './globe.js'
+
 Math.radians = function(degrees) {
     return degrees * Math.PI / 180;
 };
@@ -132,40 +82,6 @@ function animate() {
     addData(prop.time, Math.degrees(prop.state[0]));
 }
 
-function buildGlobe(radius, nLat, nLon, material) {
-    let LAT_STEP = 180.0 / nLat;
-    let LON_STEP = 360.0 / nLon;
-    console.log(LAT_STEP);
-    console.log(LON_STEP);
-    let globe = new THREE.Group();
-
-    /* Add latitudes */
-    for (let latitude = -90; latitude <= 90; latitude += LAT_STEP) {
-        let latitudeLine = new THREE.Geometry();
-        let z = radius * Math.sin(Math.radians(latitude));
-        let rcos = radius * Math.cos(Math.radians(latitude));
-        for (let longitude = 0; longitude <= 360; longitude += LON_STEP) {
-            let x = rcos * Math.cos(Math.radians(longitude));
-            let y = rcos * Math.sin(Math.radians(longitude));
-            latitudeLine.vertices.push(new THREE.Vector3(x, y, z));
-        }
-        globe.add(new THREE.Line(latitudeLine, material));
-    }
-
-    /* Add longitudes */
-    for (let longitude = 0; longitude <= 360; longitude += LON_STEP) {
-        let longitudeLine = new THREE.Geometry();
-        for (let latitude = -90; latitude <= 90; latitude += LAT_STEP) {
-            let rcos = radius * Math.cos(Math.radians(latitude));
-            let x = rcos * Math.cos(Math.radians(longitude));
-            let y = rcos * Math.sin(Math.radians(longitude));
-            let z = radius * Math.sin(Math.radians(latitude));
-            longitudeLine.vertices.push(new THREE.Vector3(x, y, z));
-        }
-        globe.add(new THREE.Line(longitudeLine, material));
-    }
-    return globe;
-}
 let data = [{
     x: [],
     y: [],
