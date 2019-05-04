@@ -1,7 +1,7 @@
 import Trace from './trace.js'
-import AttitudeDynamics from './attitude-dynamics.js'
-import ModelPropagator from './model-propagator.js'
+import * as SatelliteModel from './attitude-dynamics.js'
 import buildGlobe from './globe.js'
+import {Solver} from '../../solver.js';
 
 Math.radians = function(degrees) {
     return degrees * Math.PI / 180;
@@ -65,21 +65,45 @@ scene.add(satellite);
 var index = 0;
 var nbPoints = 0;
 
-let model = new AttitudeDynamics(80, 82, 4, 0.00104);
-let prop = new ModelPropagator(model, [0, 0, Math.radians(5), 0, 0, 0], 10);
+
+let model = new SatelliteModel.Block({
+    [SatelliteModel.ix]: 80,
+    [SatelliteModel.iy]: 82,
+    [SatelliteModel.iz]: 4,
+    [SatelliteModel.omega0]: 0.00104,
+}, {
+    [SatelliteModel.phi]: 0,
+    [SatelliteModel.theta]: 0,
+    [SatelliteModel.psi]: Math.radians(5),
+    [SatelliteModel.phiD]: 0,
+    [SatelliteModel.thetaD]: 0,
+    [SatelliteModel.psiD]: 0,
+});
+
+let solver = new Solver([ model ], [ ], 10);
+
 function animate() {
     requestAnimationFrame(animate);
-    
-    prop.step([0, 0, 0]);
-    satellite.rotation.x = prop.state[0]; /* phi */
-    satellite.rotation.y = prop.state[1]; /* theta */
-    satellite.rotation.z = prop.state[2]; /* psi */
+
+
+    solver.solve();
+    /* Force the input of the model */
+    model._solver.input = {
+        [SatelliteModel.tdx]: 0,
+        [SatelliteModel.tdy]: 0,
+        [SatelliteModel.tdz]: 0
+    };
+    solver.update();
+
+    satellite.rotation.x = model._solver.output[SatelliteModel.phi];
+    satellite.rotation.y = model._solver.output[SatelliteModel.theta];
+    satellite.rotation.z = model._solver.output[SatelliteModel.psi];
     
     renderer.render(scene, camera);
     zTrace.add(bodyAxes.localToWorld(new THREE.Vector3(0, 0, 6)));
     zTrace.update();
 
-    addData(prop.time, Math.degrees(prop.state[0]));
+    addData(solver.time, Math.degrees(model._solver.output[SatelliteModel.phi]));
 }
 
 let data = [{
