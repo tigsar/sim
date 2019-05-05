@@ -1,7 +1,9 @@
 import Trace from './trace.js'
 import * as SatelliteModel from './attitude-dynamics.js'
+import * as Plot from './plot.js'
 import buildGlobe from './globe.js'
 import {Solver} from '../../solver.js';
+import * as Time from '../../blocks/time.js';
 
 Math.radians = function(degrees) {
     return degrees * Math.PI / 180;
@@ -62,11 +64,8 @@ let zTrace = new Trace(5000, new THREE.LineBasicMaterial({color: 0xFFFFFF}), sce
 
 scene.add(inertialFrame);
 scene.add(satellite);
-var index = 0;
-var nbPoints = 0;
 
-
-let model = new SatelliteModel.Block({
+const model = new SatelliteModel.Block({
     [SatelliteModel.ix]: 80,
     [SatelliteModel.iy]: 82,
     [SatelliteModel.iz]: 4,
@@ -80,11 +79,28 @@ let model = new SatelliteModel.Block({
     [SatelliteModel.psiD]: 0,
 });
 
-let solver = new Solver([ model ], [ ], 10);
+const time = new Time.Block("Time");
+
+const plot = new Plot.Block(
+    'Phi angle plot',
+    'Phi [deg]',
+    'Time [s]',
+    [0, 15000],
+    [-0.04, 0.04],
+    (x, y) => [x, Math.degrees(y)],
+    'right-container');
+
+const solver = new Solver([ model, plot, time ], [ {
+        from: { block: model, signal: SatelliteModel.phi },
+        to: { block: plot, signal: Plot.yvar }
+    }, {
+        from: { block: time, signal: Time.output },
+        to: { block: plot, signal: Plot.xvar }
+    }
+], 10);
 
 function animate() {
     requestAnimationFrame(animate);
-
 
     solver.solve();
     /* Force the input of the model */
@@ -102,30 +118,6 @@ function animate() {
     renderer.render(scene, camera);
     zTrace.add(bodyAxes.localToWorld(new THREE.Vector3(0, 0, 6)));
     zTrace.update();
-
-    addData(solver.time, Math.degrees(model._solver.output[SatelliteModel.phi]));
-}
-
-let data = [{
-    x: [],
-    y: [],
-    mode: 'lines'
-}];
-var layout = {
-    title: 'Phi [deg]',
-    xaxis: {
-        title: 'Time [s]',
-        range: [0, 15000]
-    },
-    yaxis: {range: [-0.04, 0.04]}
-};
-Plotly.plot('right-container', data, layout);
-
-function addData(x, y) {
-    Plotly.extendTraces('right-container', {
-        x: [[x]],
-        y: [[y]]
-    }, [0]);
 }
 
 if (WEBGL.isWebGLAvailable()) {
