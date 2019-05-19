@@ -1,10 +1,13 @@
+import {isInBus} from '../bus.js'
+import {RungeKuttaIntegrator} from '../integrators/runge-kutta-integrator.js';
+
 class MissingSignal extends Error {}
-class MissingDerivative extends Error {}
 
 function checkSignal(bus, signal) {
-    if (!bus || !(signal in bus))
+    if (!isInBus(bus, signal))
         throw new MissingSignal(`${signal.toString()} is not found in the bus`);
 }
+
 class CommonBlock {
     constructor(name, inputSignals, outputSignals, parameterSignals, parameter, updatePeriod) {
         this.name = name;
@@ -66,16 +69,8 @@ export class StateSpaceBlock extends StateBlock {
 
     update(state, input) {
         this.checkState(state);
-        let derivative = this.derivative(state, input);
-        let derivativeOf = this.derivativesDef;
-        let newState = {};
-        for (let signal of Object.getOwnPropertySymbols(state)) { /* Iterate all signal of the state */
-            if (signal in derivativeOf) {
-                newState[signal] = state[signal] + derivative[derivativeOf[signal]] * this.updatePeriod;
-            } else {
-                throw new MissingDerivative(`Cannot find the derivative of ${signal.toString()}`);
-            }
-        }
-        return newState;
+        /* integrator is not initialized in constructor as updatePeriod could be unknown and thus re-computed by the solver */
+        this.integrator = this.integrator || new RungeKuttaIntegrator(this, this.derivativesDef, this.updatePeriod);
+        return this.integrator.integrate(state, input);
     }
 }
