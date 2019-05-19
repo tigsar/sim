@@ -8,7 +8,7 @@ export const yrot = Symbol('rotation_y_axis');
 export const zrot = Symbol('rotation_z_axis');
 
 export class Block extends DirectBlock {
-    constructor(name, container) {
+    constructor(name, [Ixx, Iyy, Izz], container) {
         super(
             name,
             [ xrot, yrot, zrot ], /* Input signals */
@@ -16,6 +16,10 @@ export class Block extends DirectBlock {
             [ ], /* Parameter signals */
             { }
         );
+        let m = 0.1;
+        let lx = Math.sqrt((1.0/(24.0 * m)) * (-Ixx + Iyy + Izz));
+        let ly = Math.sqrt((1.0/(24.0 * m)) * (Ixx - Iyy + Izz));
+        let lz = Math.sqrt((1.0/(24.0 * m)) * (Ixx + Iyy - Izz));
 
         /* Camera */
         let camera = new THREE.PerspectiveCamera(
@@ -32,7 +36,7 @@ export class Block extends DirectBlock {
         container.appendChild(renderer.domElement);
 
         /* Geometries */
-        let bodyG = new THREE.BoxGeometry(1, 1, 1);
+        let bodyG = new THREE.BoxGeometry(lx, ly, lz);
         let pannelG = new THREE.BoxGeometry(2.5, 1, 0.1);
 
         /* Scene */

@@ -13,6 +13,7 @@ Math.degrees = function(radians) {
 
 const model3D = new Satellite3DModel.Block(
     '3D satellite model',
+    [80, 82, 4], /* inertias */
     document.getElementById('left-container'));
 
 const model = new SatelliteModel.Block({
@@ -21,8 +22,8 @@ const model = new SatelliteModel.Block({
     [SatelliteModel.iz]: 4,
     [SatelliteModel.omega0]: 0.00104,
 }, {
-    [SatelliteModel.phi]: 0,
-    [SatelliteModel.theta]: 0,
+    [SatelliteModel.phi]: 0.1,
+    [SatelliteModel.theta]: 0.4,
     [SatelliteModel.psi]: Math.radians(5),
     [SatelliteModel.phiD]: 0,
     [SatelliteModel.thetaD]: 0,
