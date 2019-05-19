@@ -72,28 +72,30 @@ export class Block extends StateSpaceBlock {
         this.n = n;
     }
 
-    derivative(input) {
+    derivative(state, input) {
         this.checkInput(input);
+        this.checkState(state);
         let d = {};
         for (let i = 2; i <= this.n; ++i) {
-            d[this.stateSignalById[i]] = this.state[this.stateSignalById[i]];
+            d[this.stateSignalById[i]] = state[this.stateSignalById[i]];
         }
         let lastDerivative = 0.0;
         let a = this.parameter[den];
         for (let i = 1; i <= this.n; ++i) {
-            lastDerivative -= this.state[this.stateSignalById[i]] * a[this.n - i + 1];
+            lastDerivative -= state[this.stateSignalById[i]] * a[this.n - i + 1];
         }
         lastDerivative += input[this.inputSignal];
         d[lastStateDerivative] = lastDerivative;
         return d;
     }
 
-    output(input) {
+    output(state, input) {
+        this.checkState(state);
         let out = 0.0;
         let a = this.parameter[den];
         let b = this.parameter[num];
         for (let i = 1; i <= this.n; ++i) {
-            out += this.state[this.stateSignalById[i]] * (b[i] - a[i] * b[0]);
+            out += state[this.stateSignalById[i]] * (b[i] - a[i] * b[0]);
         }
         
         if (this.inputRequired) {

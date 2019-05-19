@@ -46,7 +46,7 @@ export class StateBlock extends CommonBlock {
         super(name, inputSignals, outputSignals, parameterSignals, parameter, updatePeriod);
         this.stateSignals = stateSignals;
         this.checkState(initialCondition);
-        this.state = initialCondition;
+        this.initialCondition = initialCondition;
         this.inputRequired = inputRequired; /* if true it means that input bus is needed for output evaluation */
         this.time = 0;
     }
@@ -64,15 +64,18 @@ export class StateSpaceBlock extends StateBlock {
         this.derivativesDef = derivativesDef;
     }
 
-    update(input) {
-        let derivative = this.derivative(input);
+    update(state, input) {
+        this.checkState(state);
+        let derivative = this.derivative(state, input);
         let derivativeOf = this.derivativesDef;
-        for (let signal of Object.getOwnPropertySymbols(this.state)) { /* Iterate all signal of the state */
+        let newState = {};
+        for (let signal of Object.getOwnPropertySymbols(state)) { /* Iterate all signal of the state */
             if (signal in derivativeOf) {
-                this.state[signal] += derivative[derivativeOf[signal]] * this.updatePeriod;
+                newState[signal] = state[signal] + derivative[derivativeOf[signal]] * this.updatePeriod;
             } else {
                 throw new MissingDerivative(`Cannot find the derivative of ${signal.toString()}`);
             }
         }
+        return newState;
     }
 }

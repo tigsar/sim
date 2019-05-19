@@ -30,17 +30,18 @@ export class Block extends StateSpaceBlock {
         );
     }
 
-    derivative(input) {
-        this.checkInput(input)
+    derivative(state, input) {
+        this.checkInput(input);
+        this.checkState(state);
         return {
-            [angularVelocity]: this.state[angularVelocity],
+            [angularVelocity]: state[angularVelocity],
             [angularAcceleration]: ((this.parameter[thrust] * this.parameter[arm]) / this.parameter[momentOfInertia]) * Math.sin(input[deflection])
         };
     }
 
-    output() {
+    output(state) {
         return {
-            [angle]: this.state[angle]
+            [angle]: state[angle]
         };
     }
 }

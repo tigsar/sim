@@ -29,18 +29,20 @@ export class Block extends StateSpaceBlock {
         );
     }
 
-    derivative(input) {
+    derivative(state, input) {
         this.checkInput(input);
+        this.checkState(state);
         let naturalFrequencySquare = Math.pow(this.parameter[actuatorNaturalFrequency], 2);
         return {
-            [deflectionAngularVelocity]: this.state[deflectionAngularVelocity],
-            [deflectionAngularAcceleration]: naturalFrequencySquare * input[commandedDeflection] - naturalFrequencySquare * this.state[deflection] - 2 * this.parameter[actuatorNaturalFrequency] * this.parameter[actuatorDampingRatio] * this.state[deflectionAngularVelocity]
+            [deflectionAngularVelocity]: state[deflectionAngularVelocity],
+            [deflectionAngularAcceleration]: naturalFrequencySquare * input[commandedDeflection] - naturalFrequencySquare * state[deflection] - 2 * this.parameter[actuatorNaturalFrequency] * this.parameter[actuatorDampingRatio] * state[deflectionAngularVelocity]
         };
     }
 
-    output() {
+    output(state) {
+        this.checkState(state);
         return {
-            [deflection]: this.state[deflection]
+            [deflection]: state[deflection]
         };
     }
 }

@@ -25,11 +25,14 @@ export class Solver {
 
             /* Compute the output of the block */
             if (block instanceof StateBlock) {
+                /* Set the initial condition */
+                block._solver.state = block._solver.state || block.initialCondition;
+
                 /* State Blocks may need or may need not require the input for output evaluation */
                 if (block.inputRequired) {
-                    block._solver.output = block.output(block._solver.input);
+                    block._solver.output = block.output(block._solver.state, block._solver.input);
                 } else {
-                    block._solver.output = block.output();
+                    block._solver.output = block.output(block._solver.state);
                 }
             } else if (block instanceof DirectBlock) {
                 /* Direct Blocks need the current cycle's input to calculate the output */
@@ -54,7 +57,7 @@ export class Solver {
         /* For blocks with an internal dynamic state, update the internal state (prepare for the next iteration) */
         for (let block of this.blocks) {
             if (block instanceof StateBlock && this._isReady(block)) {
-                block.update(block._solver.input);
+                block._solver.state = block.update(block._solver.state, block._solver.input);
             }
         }
         this.counter++;

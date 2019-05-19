@@ -22,13 +22,17 @@ export class Block extends StateBlock {
         );
     }
 
-    update() {
-        this.state[current] = ++this.state[current] % (this.parameter[maxValue] + 1);
+    update(state) {
+        this.checkState(state);
+        let newState = {};
+        newState[current] = ++state[current] % (this.parameter[maxValue] + 1);
+        return newState;
     }
 
-    output() {
+    output(state) {
+        this.checkState(state);
         return {
-            [output]: this.state[current]
+            [output]: state[current]
         };
     }
 }

@@ -43,28 +43,30 @@ export class Block extends StateSpaceBlock {
         );
     }
 
-    derivative(input) {
+    derivative(state, input) {
         this.checkInput(input);
+        this.checkState(state);
         let tdx_ = input[tdx], tdy_ = input[tdy], tdz_ = input[tdz];
         let ix_ = this.parameter[ix], iy_ = this.parameter[iy], iz_ = this.parameter[iz], omega0_ = this.parameter[omega0];
         return {
-            [phiD]: this.state[phiD],
-            [thetaD]: this.state[thetaD],
-            [psiD]: this.state[psiD],
-            [phiDD]: (tdx_ - 4 * Math.pow(omega0_, 2) * (iy_ - iz_) * this.state[phi] + omega0_ * (ix_ + iz_ - iy_) * this.state[psiD]) / ix_,
-            [thetaDD]: (tdy_ - 3 * Math.pow(omega0_, 2) * (ix_ - iz_) * this.state[theta]) / iy_,
-            [psiDD]: (tdz_ - Math.pow(omega0_, 2) * (iy_ - ix_) * this.state[psi] - omega0_ * (iz_ + ix_ - iy_) * this.state[phiD]) / iz_
+            [phiD]: state[phiD],
+            [thetaD]: state[thetaD],
+            [psiD]: state[psiD],
+            [phiDD]: (tdx_ - 4 * Math.pow(omega0_, 2) * (iy_ - iz_) * state[phi] + omega0_ * (ix_ + iz_ - iy_) * state[psiD]) / ix_,
+            [thetaDD]: (tdy_ - 3 * Math.pow(omega0_, 2) * (ix_ - iz_) * state[theta]) / iy_,
+            [psiDD]: (tdz_ - Math.pow(omega0_, 2) * (iy_ - ix_) * state[psi] - omega0_ * (iz_ + ix_ - iy_) * state[phiD]) / iz_
         };
     }
 
-    output() {
+    output(state) {
+        this.checkState(state);
         return {
-            [phi]: this.state[phi],
-            [theta]: this.state[theta],
-            [psi]: this.state[psi],
-            [phiD]: this.state[phiD],
-            [thetaD]: this.state[thetaD],
-            [psiD]: this.state[psiD]
+            [phi]: state[phi],
+            [theta]: state[theta],
+            [psi]: state[psi],
+            [phiD]: state[phiD],
+            [thetaD]: state[thetaD],
+            [psiD]: state[psiD]
         };
     }
 }

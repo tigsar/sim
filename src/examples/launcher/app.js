@@ -88,8 +88,8 @@ for (let n = 0; n <= N; n++) {
     solver.solve();
 
     logger.log(solver.time, [
-        actuator.state,
-        plant.state,
+        actuator._solver.state,
+        plant._solver.state,
         actuator._solver.output,
         plant._solver.output,
         sensor._solver.output,

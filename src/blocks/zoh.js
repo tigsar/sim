@@ -22,14 +22,18 @@ export class Block extends StateBlock {
         );
     }
 
-    update(inputBus) {
+    update(stateBus, inputBus) {
         this.checkInput(inputBus);
-        this.state[current] = inputBus[input];
+        this.checkState(stateBus);
+        let newState = {};
+        newState[current] = inputBus[input];
+        return newState;
     }
 
-    output() {
+    output(state) {
+        this.checkState(state);
         return {
-            [output]: this.state[current]
+            [output]: state[current]
         };
     }
 }
