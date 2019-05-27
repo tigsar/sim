@@ -13,7 +13,6 @@ import {scaleBus, sumBus} from '../bus.js'
 export class RungeKuttaIntegrator extends Integrator {
     integrate(state, input) {
         let derivativeOf = this.derivativesDef;
-        let newState = {};
 
         let convert = function(bus) {
             let cbus = {};
