@@ -11,23 +11,38 @@ Math.degrees = function(radians) {
     return radians * 180 / Math.PI;
 };
 
+// REGION A
+// Ix > Iz      (Y_B body axis stability)
+// Iy > Ix
+// Iy < Ix + Iz (X_B and Z_B axes stability)
+// If Ix = 100 Iz = 10 => 100 < Iy < 110
+//const ix = 100, iy = 105, iz = 10;
+
+// REGION B
+// Ix > Iz > Iy
+// Ix < Iy + Iz
+// If Ix = 100 Iy = 80 => 100 < Iy + 80
+//const ix = 100, iy = 40, iz = 80;
+
+const ix = 80, iy = 82, iz = 4;
+
 const model3D = new Satellite3DModel.Block(
     '3D satellite model',
-    [80, 82, 4], /* inertias */
+    [ix, iy, iz], /* inertias */
     document.getElementById('left-container'));
 
 const model = new SatelliteModel.Block({
-    [SatelliteModel.ix]: 80,
-    [SatelliteModel.iy]: 82,
-    [SatelliteModel.iz]: 4,
+    [SatelliteModel.ix]: ix,
+    [SatelliteModel.iy]: iy,
+    [SatelliteModel.iz]: iz,
     [SatelliteModel.omega0]: 0.00104,
 }, {
-    [SatelliteModel.phi]: 0.1,
-    [SatelliteModel.theta]: 0.4,
-    [SatelliteModel.psi]: Math.radians(5),
-    [SatelliteModel.phiD]: 0,
-    [SatelliteModel.thetaD]: 0,
-    [SatelliteModel.psiD]: 0,
+    [SatelliteModel.phi]: Math.radians(10),
+    [SatelliteModel.theta]: Math.radians(10),
+    [SatelliteModel.psi]: Math.radians(0),
+    [SatelliteModel.phiD]: 0.0,
+    [SatelliteModel.thetaD]: 0.0,
+    [SatelliteModel.psiD]: 0.0,
 });
 
 const time = new Time.Block("Time");
@@ -57,7 +72,7 @@ const solver = new Solver([ model, plot, time, model3D ], [ {
         from: { block: model, signal: SatelliteModel.psi },
         to: { block: model3D, signal: Satellite3DModel.zrot }
     }
-], 10);
+], 100);
 
 function animate() {
     requestAnimationFrame(animate);

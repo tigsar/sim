@@ -2,10 +2,10 @@ import {StateBlock} from './base.js'
 
 /* Definition of output and state signals */
 export const output = Symbol('output');
-const current = Symbol('current');
+export const current = Symbol('current');
 
 /* Definition of parameter signals */
-const maxValue = Symbol('max value');
+export const maxValue = Symbol('max value');
 
 export class Block extends StateBlock {
     constructor(name, maximum, updatePeriod) {
